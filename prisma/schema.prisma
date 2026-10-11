@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ReservationStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+enum NotificationType {
+  RESERVATION_CONFIRMED
+  RESERVATION_UPDATED
+  RESERVATION_CANCELLED
+  RESERVATION_REMINDER
+  SYSTEM
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  passwordHash  String?
+  googleId      String?        @unique
+  role          UserRole       @default(USER)
+  isActive      Boolean        @default(true)
+  reservations  Reservation[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(3)
+
+  @@index([role])
+  @@index([isActive])
+}
+
+model Resource {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  location     String?
+  capacity     Int?
+  isActive     Boolean       @default(true)
+  reservations Reservation[]
+  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(3)
+
+  @@index([isActive])
+  @@index([name])
+}
+
+model Reservation {
+  id             String            @id @default(cuid())
+  userId         String
+  resourceId     String
+  requesterName  String
+  requesterEmail String
+  purpose        String
+  startTime      DateTime          @db.Timestamptz(3)
+  endTime        DateTime          @db.Timestamptz(3)
+  status         ReservationStatus @default(CONFIRMED)
+  user           User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  resource       Resource          @relation(fields: [resourceId], references: [id], onDelete: Restrict)
+  createdAt      DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime          @updatedAt @db.Timestamptz(3)
+
+  @@index([userId, startTime])
+  @@index([resourceId, startTime, endTime])
+  @@index([status])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      NotificationType @default(SYSTEM)
+  readAt    DateTime?        @db.Timestamptz(3)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
+
+  @@index([userId, readAt, createdAt])
+  @@index([type])
+}
