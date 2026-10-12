@@ -67,12 +67,18 @@ export default function LoginPage() {
         }),
       });
 
-      const data: { user?: SuccessData; error?: string } = await res.json();
+      const data: { user?: SuccessData; error?: string; redirectUrl?: string } = await res.json();
 
       if (!res.ok) {
         setErrors({ form: data.error ?? "Login failed. Please try again." });
       } else if (data.user) {
         setSuccess(data.user);
+        const searchParams = new URLSearchParams(window.location.search);
+        const callbackUrl = searchParams.get("callbackUrl");
+        const destination = callbackUrl || data.redirectUrl || "/dashboard";
+        setTimeout(() => {
+          window.location.href = destination;
+        }, 500);
       }
     } catch {
       setErrors({ form: "Network error. Please check your connection and try again." });
@@ -103,15 +109,6 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* ⚠️ No-session notice */}
-            <div
-              role="note"
-              className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800"
-            >
-              <strong>Note:</strong> Session management (cookies / JWT) is not yet implemented.
-              Successful login confirms your credentials but does not create a persistent session.
-            </div>
-
             {success ? (
               <div
                 id="login-success"
@@ -128,13 +125,13 @@ export default function LoginPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
                 <h2 className="text-base font-semibold text-emerald-800">
-                  Credentials verified
+                  Login successful
                 </h2>
                 <p className="mt-1 text-sm text-emerald-700">
                   Welcome back, <strong>{success.name}</strong>!
                 </p>
-                <p className="mt-2 text-xs text-amber-700 font-medium">
-                  Session management is not yet implemented — you are not logged in.
+                <p className="mt-2 text-xs text-slate-500">
+                  Redirecting to your dashboard…
                 </p>
               </div>
             ) : (

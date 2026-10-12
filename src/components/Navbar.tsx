@@ -1,10 +1,40 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+
+interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: "USER" | "ADMIN";
+}
 
 export default function Navbar() {
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.user) {
+          setUser(data.user);
+        }
+      })
+      .catch(() => {
+        // Unauthenticated or network error — remain in guest view
+      });
+  }, []);
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-sm">
@@ -28,18 +58,49 @@ export default function Navbar() {
           >
             Home
           </Link>
-          <Link
-            href="/login"
-            className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors"
-          >
-            Register
-          </Link>
+
+          {user ? (
+            <>
+              {user.role === "ADMIN" ? (
+                <Link
+                  href="/admin"
+                  className="rounded-lg bg-purple-50 px-3 py-1.5 text-sm font-semibold text-purple-700 ring-1 ring-inset ring-purple-600/20 hover:bg-purple-100 transition-colors"
+                >
+                  Admin Console
+                </Link>
+              ) : null}
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+              >
+                Dashboard
+              </Link>
+              <span className="text-xs text-slate-500">
+                Hi, <strong className="text-slate-800">{user.name}</strong>
+              </span>
+              <button
+                onClick={() => void handleLogout()}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors"
+              >
+                Log out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 transition-colors"
+              >
+                Register
+              </Link>
+            </>
+          )}
         </nav>
 
         {/* Mobile hamburger */}
@@ -78,20 +139,53 @@ export default function Navbar() {
             >
               Home
             </Link>
-            <Link
-              href="/login"
-              className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              Login
-            </Link>
-            <Link
-              href="/register"
-              className="mt-1 block rounded-lg bg-indigo-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
-              onClick={() => setMenuOpen(false)}
-            >
-              Register
-            </Link>
+
+            {user ? (
+              <>
+                {user.role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    className="rounded-md px-3 py-2 text-sm font-semibold text-purple-700 hover:bg-purple-50 transition-colors"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Admin Console
+                  </Link>
+                )}
+                <Link
+                  href="/dashboard"
+                  className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    void handleLogout();
+                  }}
+                  className="mt-1 block text-left rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                >
+                  Log out ({user.name})
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="mt-1 block rounded-lg bg-indigo-600 px-3 py-2 text-center text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       )}
