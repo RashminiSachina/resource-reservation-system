@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 
-type Tab = "overview" | "users" | "resources" | "reservations";
+type Tab = "overview" | "users" | "resources" | "categories" | "reservations";
 type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
 
 interface Stats {
@@ -68,6 +68,14 @@ interface CategoryOption {
   name: string;
 }
 
+interface AdminCategory {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  _count: { resources: number };
+}
+
 const STATUS_STYLES: Record<ReservationStatus, string> = {
   PENDING: "bg-amber-100 text-amber-800",
   CONFIRMED: "bg-emerald-100 text-emerald-800",
@@ -101,6 +109,11 @@ export default function AdminDashboardPage() {
   const [resourceModalOpen, setResourceModalOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<AdminResource | null>(null);
 
+  // Categories state
+  const [adminCategories, setAdminCategories] = useState<AdminCategory[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+
   // Reservations state
   const [reservations, setReservations] = useState<AdminReservation[]>([]);
   const [reservationSearch, setReservationSearch] = useState("");
@@ -108,8 +121,17 @@ export default function AdminDashboardPage() {
   const [reservationsLoading, setReservationsLoading] = useState(false);
   const [reservationActionId, setReservationActionId] = useState<string | null>(null);
 
-  // Common error alert
+  // Common error & success alerts
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [successBanner, setSuccessBanner] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!successBanner) return;
+    const timer = setTimeout(() => {
+      setSuccessBanner(null);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [successBanner]);
 
   // Load current admin info on mount
   useEffect(() => {
@@ -217,11 +239,37 @@ export default function AdminDashboardPage() {
     }
   }
 
+  // Fetch categories
+  async function loadAdminCategories(showSpinner = true) {
+    if (showSpinner) setCategoriesLoading(true);
+    setErrorBanner(null);
+    try {
+      const res = await fetch("/api/admin/categories");
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          router.push("/login?callbackUrl=/admin");
+          return;
+        }
+        throw new Error("Failed to load categories.");
+      }
+      const data = await res.json();
+      const list: AdminCategory[] = data.categories ?? [];
+      setAdminCategories(list);
+      // Synchronize category options used in ResourceModal & filter dropdowns
+      setCategories(list.map((c) => ({ id: c.id, name: c.name })));
+    } catch (e) {
+      setErrorBanner(e instanceof Error ? e.message : "Error loading categories.");
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }
+
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (activeTab === "overview") void loadOverview(false);
     else if (activeTab === "users") void loadUsers(false);
     else if (activeTab === "resources") void loadResources(false);
+    else if (activeTab === "categories") void loadAdminCategories(false);
     else if (activeTab === "reservations") void loadReservations(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
@@ -343,6 +391,24 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
+        {/* Success Banner */}
+        {successBanner && (
+          <div className="mb-6 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-sm">
+            <div className="flex items-center gap-2">
+              <svg className="h-5 w-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-medium">{successBanner}</span>
+            </div>
+            <button
+              onClick={() => setSuccessBanner(null)}
+              className="text-emerald-600 hover:text-emerald-800 text-xs font-semibold"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Dashboard Title & Tabs Header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -359,6 +425,7 @@ export default function AdminDashboardPage() {
                 { id: "overview", label: "Overview" },
                 { id: "users", label: "Users" },
                 { id: "resources", label: "Resources" },
+                { id: "categories", label: "Categories" },
                 { id: "reservations", label: "Reservations" },
               ] as const
             ).map((t) => (
@@ -613,9 +680,12 @@ export default function AdminDashboardPage() {
                   setEditingResource(null);
                   setResourceModalOpen(true);
                 }}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition"
+                className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
               >
-                + Add Resource
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Create Resource
               </button>
             </div>
 
@@ -696,7 +766,92 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* TAB 4: RESERVATIONS */}
+        {/* TAB 4: CATEGORIES */}
+        {activeTab === "categories" && (
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">Resource Categories</h2>
+                <p className="text-xs text-slate-500">
+                  Manage categorization for bookable rooms, equipment, and facilities.
+                </p>
+              </div>
+              <button
+                onClick={() => setCategoryModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Create Category
+              </button>
+            </div>
+
+            {/* Table or Loading */}
+            {categoriesLoading ? (
+              <div className="flex h-48 items-center justify-center">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+              </div>
+            ) : adminCategories.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white py-16 text-center shadow-sm">
+                <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
+                </svg>
+                <p className="mt-3 text-sm font-medium text-slate-700">No categories found</p>
+                <p className="mt-1 text-xs text-slate-500">Create your first category to start organizing resources.</p>
+                <button
+                  onClick={() => setCategoryModalOpen(true)}
+                  className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
+                >
+                  + Create Category
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-100 text-sm">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        {["Category Name", "Description", "Associated Resources", "Created Date"].map((h) => (
+                          <th key={h} className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {adminCategories.map((c) => (
+                        <tr key={c.id} className="hover:bg-slate-50/80 transition">
+                          <td className="whitespace-nowrap px-6 py-4">
+                            <span className="font-semibold text-slate-900">{c.name}</span>
+                          </td>
+                          <td className="max-w-xs truncate px-6 py-4 text-slate-600">
+                            {c.description ? c.description : <span className="text-slate-400 italic">No description</span>}
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4">
+                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                              {c._count.resources} {c._count.resources === 1 ? "resource" : "resources"}
+                            </span>
+                          </td>
+                          <td className="whitespace-nowrap px-6 py-4 text-xs text-slate-500">
+                            {new Date(c.createdAt).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 5: RESERVATIONS */}
         {activeTab === "reservations" && (
           <div className="space-y-4">
             {/* Filter toolbar */}
@@ -829,10 +984,24 @@ export default function AdminDashboardPage() {
             setResourceModalOpen(false);
             setEditingResource(null);
           }}
-          onSuccess={() => {
+          onSuccess={(msg) => {
             setResourceModalOpen(false);
             setEditingResource(null);
+            setSuccessBanner(msg);
             void loadResources();
+          }}
+        />
+      )}
+
+      {/* Category Create Modal */}
+      {categoryModalOpen && (
+        <CategoryModal
+          onClose={() => setCategoryModalOpen(false)}
+          onSuccess={(msg) => {
+            setCategoryModalOpen(false);
+            setSuccessBanner(msg);
+            void loadAdminCategories(false);
+            void loadResources(false);
           }}
         />
       )}
@@ -852,27 +1021,69 @@ function ResourceModal({
   categories: CategoryOption[];
   resource: AdminResource | null;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (message: string) => void;
 }) {
   const [name, setName] = useState(resource?.name ?? "");
   const [description, setDescription] = useState(resource?.description ?? "");
   const [location, setLocation] = useState(resource?.location ?? "");
   const [capacity, setCapacity] = useState(resource?.capacity ? String(resource.capacity) : "");
-  const [categoryId, setCategoryId] = useState(resource?.category.id ?? (categories[0]?.id ?? ""));
+  const [categoryId, setCategoryId] = useState(
+    resource?.category.id ?? (categories[0]?.id ?? "")
+  );
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setErr(null);
+
+    // Client-side validation
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setErr("Resource name is required.");
+      return;
+    }
+    if (trimmedName.length > 100) {
+      setErr("Resource name cannot exceed 100 characters.");
+      return;
+    }
+
+    const trimmedCategoryId = categoryId.trim();
+    if (!trimmedCategoryId) {
+      setErr("Please select a resource category.");
+      return;
+    }
+
+    const trimmedLocation = location.trim();
+    if (!trimmedLocation) {
+      setErr("Location is required.");
+      return;
+    }
+    if (trimmedLocation.length > 150) {
+      setErr("Location cannot exceed 150 characters.");
+      return;
+    }
+
+    const parsedCapacity = parseInt(capacity.trim(), 10);
+    if (!capacity.trim() || isNaN(parsedCapacity) || parsedCapacity <= 0) {
+      setErr("Capacity is required and must be a positive integer.");
+      return;
+    }
+
+    const trimmedDescription = description.trim();
+    if (trimmedDescription.length > 1000) {
+      setErr("Description cannot exceed 1000 characters.");
+      return;
+    }
+
     setLoading(true);
 
     const payload = {
-      name,
-      description: description || undefined,
-      location: location || undefined,
-      capacity: capacity ? parseInt(capacity, 10) : undefined,
-      categoryId,
+      name: trimmedName,
+      description: trimmedDescription || undefined,
+      location: trimmedLocation,
+      capacity: parsedCapacity,
+      categoryId: trimmedCategoryId,
     };
 
     try {
@@ -891,9 +1102,12 @@ function ResourceModal({
         setErr(d.error ?? "Failed to save resource.");
         return;
       }
-      onSuccess();
+      onSuccess(
+        d.message ??
+          (resource ? "Resource updated successfully." : "Resource created successfully.")
+      );
     } catch {
-      setErr("Network error saving resource.");
+      setErr("Network error saving resource. Please check your connection.");
     } finally {
       setLoading(false);
     }
@@ -903,74 +1117,120 @@ function ResourceModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">
-            {resource ? "Edit Resource" : "Create New Resource"}
-          </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">✕</button>
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              {resource ? "Edit Resource" : "Create New Resource"}
+            </h3>
+            <p className="text-xs text-slate-500">
+              {resource
+                ? "Update the details and availability of this resource."
+                : "Add a new bookable resource to the ReserveIt catalog."}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="text-slate-400 hover:text-slate-600 disabled:opacity-50"
+            aria-label="Close modal"
+          >
+            ✕
+          </button>
         </div>
 
-        {err && <div className="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{err}</div>}
+        {err && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+            <svg className="h-4 w-4 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 8.25h.008v.008H12v-.008z" />
+            </svg>
+            <span>{err}</span>
+          </div>
+        )}
 
         <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Name *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Resource Name <span className="text-red-500">*</span>
+            </label>
             <input
               required
               type="text"
               value={name}
+              disabled={loading}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Conference Room A, Projector 1"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              placeholder="e.g. Conference Room A, Projector 1, Science Lab"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:opacity-75"
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Category *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Category <span className="text-red-500">*</span>
+            </label>
             <select
               required
               value={categoryId}
+              disabled={loading}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:opacity-75"
             >
               <option value="">Select a category…</option>
               {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
               ))}
             </select>
+            {categories.length === 0 && (
+              <p className="mt-1 text-xs text-amber-600">
+                No categories available in database. Please ensure categories exist first.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Location</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Location <span className="text-red-500">*</span>
+              </label>
               <input
+                required
                 type="text"
                 value={location}
+                disabled={loading}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. Building 2, Floor 3"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:opacity-75"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Capacity</label>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Capacity (seats) <span className="text-red-500">*</span>
+              </label>
               <input
+                required
                 type="number"
                 min={1}
+                step={1}
                 value={capacity}
+                disabled={loading}
                 onChange={(e) => setCapacity(e.target.value)}
                 placeholder="e.g. 10"
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:opacity-75"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Description</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Description <span className="text-xs text-slate-400 font-normal">(optional)</span>
+            </label>
             <textarea
               rows={3}
               value={description}
+              disabled={loading}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Details about equipment, AV support, guidelines…"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              placeholder="Details about equipment, AV support, guidelines, or amenities…"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:opacity-75"
             />
           </div>
 
@@ -978,16 +1238,179 @@ function ResourceModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-slate-200 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+              disabled={loading}
+              className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-lg bg-indigo-600 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition"
+              className="flex-1 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition"
             >
-              {loading ? "Saving…" : resource ? "Update Resource" : "Create Resource"}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  {resource ? "Updating…" : "Creating…"}
+                </span>
+              ) : resource ? (
+                "Update Resource"
+              ) : (
+                "Create Resource"
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ---- Category Create Modal ----
+function CategoryModal({
+  onClose,
+  onSuccess,
+}: {
+  onClose: () => void;
+  onSuccess: (message: string) => void;
+}) {
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setErr(null);
+
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setErr("Category name is required.");
+      return;
+    }
+    if (trimmedName.length > 100) {
+      setErr("Category name cannot exceed 100 characters.");
+      return;
+    }
+
+    const trimmedDesc = description.trim();
+    if (trimmedDesc.length > 500) {
+      setErr("Description cannot exceed 500 characters.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: trimmedName,
+          description: trimmedDesc || undefined,
+        }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setErr(d.error ?? "Failed to create category.");
+        return;
+      }
+      onSuccess(d.message ?? "Category created successfully.");
+    } catch {
+      setErr("Network error creating category. Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">Create New Category</h3>
+            <p className="text-xs text-slate-500">
+              Add a new classification category for catalog resources.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="text-slate-400 hover:text-slate-600 disabled:opacity-50"
+            aria-label="Close modal"
+          >
+            ✕
+          </button>
+        </div>
+
+        {err && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+            <svg className="h-4 w-4 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 8.25h.008v.008H12v-.008z" />
+            </svg>
+            <span>{err}</span>
+          </div>
+        )}
+
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Category Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              required
+              type="text"
+              value={name}
+              disabled={loading}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Laboratories, Equipment, Study Pods"
+              maxLength={100}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:opacity-75"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">
+              Description <span className="text-xs text-slate-400 font-normal">(optional)</span>
+            </label>
+            <textarea
+              rows={3}
+              value={description}
+              disabled={loading}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Short description of what belongs in this category…"
+              maxLength={500}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:opacity-75"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 rounded-lg bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60 transition"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Creating…
+                </span>
+              ) : (
+                "Create Category"
+              )}
             </button>
           </div>
         </form>
