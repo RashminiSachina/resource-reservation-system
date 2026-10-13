@@ -59,6 +59,21 @@ export async function getActiveRegularUserIds(): Promise<string[]> {
 }
 
 /**
+ * Get all active admin user IDs
+ */
+export async function getActiveAdminUserIds(): Promise<string[]> {
+  const users = await prisma.user.findMany({
+    where: {
+      role: "ADMIN",
+      isActive: true,
+    },
+    select: { id: true },
+  });
+
+  return users.map((u) => u.id);
+}
+
+/**
  * Format reservation date/time for notifications
  */
 export function formatReservationTime(startTime: Date, endTime: Date): string {
