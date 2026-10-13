@@ -339,7 +339,7 @@ export default function UserDashboard() {
               <span className="text-sm font-medium text-[#1A1A1A]">{user?.name}</span>
               <span className="text-xs text-[#6B7280]">{user?.email}</span>
             </div>
-            <NotificationBell userId={user?.id || ""} />
+            {user && <NotificationBell userId={user.id} />}
             <Link
               href="/profile"
               className="text-sm font-medium text-[#374151] hover:text-[#0052CC] transition-colors"

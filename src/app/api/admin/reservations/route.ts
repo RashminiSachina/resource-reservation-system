@@ -7,7 +7,7 @@ import {
   approvalConflictError,
   findOccupiedOverlap,
 } from "@/lib/reservation-conflicts";
-import { createNotification, getActiveAdminUserIds } from "@/lib/notifications";
+import { createNotification, formatReservationTime } from "@/lib/notifications";
 
 const MAX_TX_RETRIES = 3;
 
@@ -132,14 +132,18 @@ export async function PATCH(request: NextRequest) {
       select: { id: true, status: true, user: { select: { id: true, name: true } }, resource: { select: { name: true } } },
     });
 
-    // Send notification to user
-    if (nextStatus === "CANCELLED") {
-      await createNotification({
-        userId: reservation.userId,
-        title: "Reservation Cancelled",
-        message: `Your reservation for ${reservation.resource.name} has been cancelled by an admin.`,
-        type: "RESERVATION_CANCELLED",
-      });
+    // If admin cancelled a reservation, notify the owner
+    if (nextStatus === "CANCELLED" && reservation.status !== "CANCELLED") {
+      try {
+        await createNotification({
+          userId: reservation.userId,
+          title: "Reservation Cancelled",
+          message: `Your reservation for ${reservation.resource.name} has been cancelled by an administrator.`,
+          type: "RESERVATION_CANCELLED",
+        });
+      } catch (notificationError) {
+        console.error("[Notification] Failed to create cancellation notification:", notificationError);
+      }
     }
 
     return Response.json({ message: "Reservation updated.", reservation: updated }, { status: 200 });
@@ -155,6 +159,7 @@ export async function PATCH(request: NextRequest) {
             select: {
               id: true,
               status: true,
+              userId: true,
               resourceId: true,
               startTime: true,
               endTime: true,
@@ -203,6 +208,9 @@ export async function PATCH(request: NextRequest) {
             select: {
               id: true,
               status: true,
+              userId: true,
+              startTime: true,
+              endTime: true,
               user: { select: { id: true, name: true } },
               resource: { select: { name: true } },
             },
@@ -211,13 +219,32 @@ export async function PATCH(request: NextRequest) {
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
       );
 
-      // Send notification to user about approval
-      await createNotification({
-        userId: reservation.userId,
-        title: "Reservation Approved",
-        message: `Your reservation for ${reservation.resource.name} has been approved.`,
-        type: "RESERVATION_CONFIRMED",
+      // Notify the reservation owner about approval (outside transaction)
+      // Only notify if status actually changed from PENDING to CONFIRMED
+      // We need to re-fetch the reservation to get the start/end times since they're not in the transaction return
+      const reservationForNotification = await prisma.reservation.findUnique({
+        where: { id: updated.id },
+        select: {
+          userId: true,
+          startTime: true,
+          endTime: true,
+          resource: { select: { name: true } },
+        },
       });
+
+      if (reservationForNotification) {
+        try {
+          const timeString = formatReservationTime(reservationForNotification.startTime, reservationForNotification.endTime);
+          await createNotification({
+            userId: reservationForNotification.userId,
+            title: "Reservation Approved",
+            message: `Your reservation for ${reservationForNotification.resource.name} on ${timeString} has been approved.`,
+            type: "RESERVATION_CONFIRMED",
+          });
+        } catch (notificationError) {
+          console.error("[Notification] Failed to create approval notification:", notificationError);
+        }
+      }
 
       return Response.json({ message: "Reservation approved.", reservation: updated }, { status: 200 });
     } catch (err) {

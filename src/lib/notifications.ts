@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
-
-type NotificationType = "RESERVATION_CONFIRMED" | "RESERVATION_UPDATED" | "RESERVATION_CANCELLED" | "RESERVATION_REMINDER" | "SYSTEM" | "NEW_RESOURCE";
+import { NotificationType } from "@/generated/prisma/client";
 
 /**
  * Create a notification for a specific user

@@ -84,8 +84,8 @@ export default function Navbar() {
               </Link>
               <NotificationBell userId={user.id} />
               <div className="h-6 w-px bg-[#E5E7EB] mx-2" />
-              <span className="text-sm text-[#6B7280]">
-                {user.name}
+              <span className="text-xs text-slate-500">
+                Hi, <strong className="text-slate-800">{user.name}</strong>
               </span>
               <button
                 onClick={() => void handleLogout()}

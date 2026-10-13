@@ -381,7 +381,7 @@ export default function AdminDashboardPage() {
             >
               User Dashboard
             </Link>
-            <NotificationBell userId={currentAdmin?.id || ""} />
+            {currentAdmin && <NotificationBell userId={currentAdmin.id} />}
             <Link
               href="/profile"
               className="text-xs font-medium text-[#374151] hover:text-[#0052CC] transition-colors"
