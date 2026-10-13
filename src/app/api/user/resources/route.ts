@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const startParam = searchParams.get("startTime");
   const endParam = searchParams.get("endTime");
+  const categoryIdParam = searchParams.get("categoryId");
 
   // Parse and validate optional time window
   let windowStart: Date | null = null;
@@ -29,7 +30,11 @@ export async function GET(request: NextRequest) {
   }
 
   const resources = await prisma.resource.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      // Filter by category when provided
+      ...(categoryIdParam ? { categoryId: categoryIdParam } : {}),
+    },
     orderBy: { name: "asc" },
     select: {
       id: true,

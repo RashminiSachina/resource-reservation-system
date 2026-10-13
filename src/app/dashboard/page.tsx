@@ -95,6 +95,11 @@ export default function UserDashboard() {
   const [windowEnd, setWindowEnd] = useState("");
   const [windowChecked, setWindowChecked] = useState(false);
 
+  // Category filter state
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(""); // empty = All Categories
+
   // Bookings tab state
   const [bookings, setBookings] = useState<ReservationRow[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
@@ -136,15 +141,19 @@ export default function UserDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load resources (with optional time window)
-  const loadResources = useCallback(async (start?: string, end?: string) => {
+  // Load resources (with optional time window and category)
+  const loadResources = useCallback(async (start?: string, end?: string, categoryId?: string) => {
     setResourcesLoading(true);
     setResourcesError(null);
     try {
-      let url = "/api/user/resources";
+      const params = new URLSearchParams();
       if (start && end) {
-        url += `?startTime=${encodeURIComponent(new Date(start).toISOString())}&endTime=${encodeURIComponent(new Date(end).toISOString())}`;
+        params.set("startTime", new Date(start).toISOString());
+        params.set("endTime", new Date(end).toISOString());
       }
+      if (categoryId) params.set("categoryId", categoryId);
+      const qs = params.toString();
+      const url = qs ? `/api/user/resources?${qs}` : "/api/user/resources";
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to load resources.");
       const d = await res.json();
@@ -155,6 +164,22 @@ export default function UserDashboard() {
       setResourcesLoading(false);
     }
   }, []);
+
+  // Load categories once (for the dropdown)
+  const loadCategories = useCallback(async () => {
+    setCategoriesLoading(true);
+    try {
+      const res = await fetch("/api/user/categories");
+      if (!res.ok) throw new Error("Failed to load categories.");
+      const d = await res.json();
+      setCategories((d.categories as { id: string; name: string }[]) ?? []);
+    } catch {
+      // Non-critical – dropdown will still show "All Categories"
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }, []);
+
 
   // Load bookings
   const loadBookings = useCallback(async () => {
@@ -172,6 +197,15 @@ export default function UserDashboard() {
     }
   }, []);
 
+  // Load categories once after auth succeeds
+  useEffect(() => {
+    if (authLoading) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading]);
+
+
   // Load initial data based on active tab
   useEffect(() => {
     if (authLoading) return;
@@ -185,31 +219,45 @@ export default function UserDashboard() {
   }, [activeTab, authLoading]);
 
   function handleCheckAvailability() {
-    if (!windowStart || !windowEnd) {
-      setErrorBanner("Please select both a start and end time to check availability.");
+    // Require at least a category or a time window
+    if (!selectedCategory && !windowStart && !windowEnd) {
+      setErrorBanner("Please select a category or a time window to search.");
       return;
     }
-    const s = new Date(windowStart);
-    const e = new Date(windowEnd);
-    if (e <= s) {
-      setErrorBanner("End time must be after start time.");
-      return;
-    }
-    if (s.getTime() - Date.now() < 60 * 1000) {
-      setErrorBanner("Start time must be at least 1 minute in the future.");
-      return;
+    // If either date is provided, both must be valid
+    if (windowStart || windowEnd) {
+      if (!windowStart || !windowEnd) {
+        setErrorBanner("Please provide both a start and end time.");
+        return;
+      }
+      const s = new Date(windowStart);
+      const e = new Date(windowEnd);
+      if (e <= s) {
+        setErrorBanner("End time must be after start time.");
+        return;
+      }
+      if (s.getTime() - Date.now() < 60 * 1000) {
+        setErrorBanner("Start time must be at least 1 minute in the future.");
+        return;
+      }
     }
     setErrorBanner(null);
     setWindowChecked(true);
-    void loadResources(windowStart, windowEnd);
+    void loadResources(
+      windowStart || undefined,
+      windowEnd || undefined,
+      selectedCategory || undefined
+    );
   }
 
   function clearTimeWindow() {
     setWindowStart("");
     setWindowEnd("");
     setWindowChecked(false);
+    setSelectedCategory("");
     void loadResources();
   }
+
 
   async function handleCancel(reservationId: string) {
     if (!confirm("Are you sure you want to cancel this reservation?")) return;
@@ -227,11 +275,15 @@ export default function UserDashboard() {
       }
       setSuccessBanner("Reservation cancelled successfully.");
       await loadBookings();
-      // Refresh resource cards if a time window is active
-      if (windowChecked && windowStart && windowEnd) {
-        await loadResources(windowStart, windowEnd);
+      // Refresh resource cards preserving active filters
+      if (windowChecked) {
+        await loadResources(
+          windowStart || undefined,
+          windowEnd || undefined,
+          selectedCategory || undefined
+        );
       } else {
-        await loadResources();
+        await loadResources(undefined, undefined, selectedCategory || undefined);
       }
     } catch {
       setErrorBanner("Network error. Please try again.");
@@ -239,6 +291,7 @@ export default function UserDashboard() {
       setCancellingId(null);
     }
   }
+
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -351,39 +404,83 @@ export default function UserDashboard() {
         {/* ===== TAB 1: AVAILABLE RESOURCES ===== */}
         {activeTab === "resources" && (
           <div className="space-y-5">
-            {/* Time Window Picker */}
+            {/* Search / Filter Panel */}
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <p className="mb-3 text-sm font-semibold text-slate-700">
-                Check availability for a specific time window:
+                Filter resources by category and availability:
               </p>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                <div className="flex-1">
-                  <label className="mb-1 block text-xs font-medium text-slate-600">Start Date & Time</label>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:flex-wrap">
+                {/* Category dropdown */}
+                <div className="w-full sm:w-auto sm:min-w-[180px] sm:flex-1">
+                  <label
+                    htmlFor="resource-category"
+                    className="mb-1 block text-xs font-medium text-slate-600"
+                  >
+                    Resource Category
+                  </label>
+                  <select
+                    id="resource-category"
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    disabled={categoriesLoading}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-60"
+                    aria-label="Filter by resource category"
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Start date */}
+                <div className="w-full sm:w-auto sm:flex-1">
+                  <label
+                    htmlFor="window-start"
+                    className="mb-1 block text-xs font-medium text-slate-600"
+                  >
+                    Start Date &amp; Time
+                  </label>
                   <input
+                    id="window-start"
                     type="datetime-local"
                     value={windowStart}
                     onChange={(e) => setWindowStart(e.target.value)}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    aria-label="Start date and time"
                   />
                 </div>
-                <div className="flex-1">
-                  <label className="mb-1 block text-xs font-medium text-slate-600">End Date & Time</label>
+
+                {/* End date */}
+                <div className="w-full sm:w-auto sm:flex-1">
+                  <label
+                    htmlFor="window-end"
+                    className="mb-1 block text-xs font-medium text-slate-600"
+                  >
+                    End Date &amp; Time
+                  </label>
                   <input
+                    id="window-end"
                     type="datetime-local"
                     value={windowEnd}
                     onChange={(e) => setWindowEnd(e.target.value)}
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    aria-label="End date and time"
                   />
                 </div>
-                <div className="flex gap-2">
+
+                {/* Action buttons */}
+                <div className="flex gap-2 pt-0 sm:pb-0">
                   <button
                     onClick={handleCheckAvailability}
-                    className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition"
+                    className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition whitespace-nowrap"
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                     </svg>
-                    Check
+                    Find Available Resources
                   </button>
                   {windowChecked && (
                     <button
@@ -395,12 +492,16 @@ export default function UserDashboard() {
                   )}
                 </div>
               </div>
+
+              {/* Active filter status indicator */}
               {windowChecked && (
                 <p className="mt-2 text-xs text-emerald-600 font-medium">
-                  ✓ Showing availability from{" "}
-                  {new Date(windowStart).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}{" "}
-                  to{" "}
-                  {new Date(windowEnd).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  {selectedCategory
+                    ? `✓ Category: "${categories.find((c) => c.id === selectedCategory)?.name ?? ""}"`
+                    : "✓ All categories"}
+                  {windowStart && windowEnd
+                    ? ` · ${new Date(windowStart).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })} → ${new Date(windowEnd).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}`
+                    : ""}
                 </p>
               )}
             </div>
@@ -416,12 +517,19 @@ export default function UserDashboard() {
               <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
                 <p className="text-sm font-medium text-red-700">{resourcesError}</p>
                 <button
-                  onClick={() => void loadResources(windowChecked ? windowStart : undefined, windowChecked ? windowEnd : undefined)}
+                  onClick={() =>
+                    void loadResources(
+                      windowChecked && windowStart ? windowStart : undefined,
+                      windowChecked && windowEnd ? windowEnd : undefined,
+                      selectedCategory || undefined
+                    )
+                  }
                   className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
                 >
                   Try Again
                 </button>
               </div>
+
             ) : resources.length === 0 ? (
               <div className="flex flex-col items-center py-20 text-center">
                 <svg className="mb-4 h-14 w-14 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -639,10 +747,14 @@ export default function UserDashboard() {
             setSuccessBanner(msg);
             // Refresh both tabs
             void loadBookings();
-            if (windowChecked && windowStart && windowEnd) {
-              void loadResources(windowStart, windowEnd);
+            if (windowChecked) {
+              void loadResources(
+                windowStart || undefined,
+                windowEnd || undefined,
+                selectedCategory || undefined
+              );
             } else {
-              void loadResources();
+              void loadResources(undefined, undefined, selectedCategory || undefined);
             }
           }}
           onError={(msg) => setErrorBanner(msg)}
