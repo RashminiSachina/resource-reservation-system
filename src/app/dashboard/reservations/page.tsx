@@ -196,7 +196,7 @@ export default function UserReservationsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap">
-                        {r.status === "PENDING" && (
+                        {(r.status === "PENDING" || r.status === "CONFIRMED") && (
                           <button
                             onClick={() => void handleCancel(r.id)}
                             disabled={cancellingId === r.id}

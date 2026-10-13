@@ -15,6 +15,7 @@ interface ResourceCard {
   description: string | null;
   location: string | null;
   capacity: number | null;
+  requiresApproval?: boolean;
   category: { id: string; name: string };
   availability: Availability;
   conflictStart: string | null;
@@ -572,9 +573,20 @@ export default function UserDashboard() {
 
                       <div className="flex flex-1 flex-col p-5">
                         {/* Category */}
-                        <span className="mb-2 w-fit rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
-                          {resource.category.name}
-                        </span>
+                        <div className="mb-2 flex flex-wrap items-center gap-1.5 pr-24">
+                          <span className="w-fit rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                            {resource.category.name}
+                          </span>
+                          <span
+                            className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                              resource.requiresApproval !== false
+                                ? "bg-amber-50 text-amber-800"
+                                : "bg-sky-50 text-sky-800"
+                            }`}
+                          >
+                            {resource.requiresApproval !== false ? "Needs approval" : "Instant confirm"}
+                          </span>
+                        </div>
 
                         {/* Name */}
                         <h3 className="mb-1 text-base font-semibold text-slate-900 pr-20">
@@ -878,7 +890,13 @@ function BookingModal({
         }
         return;
       }
-      onSuccess(d.message ?? "Reservation submitted successfully!");
+      const confirmed = d.reservation?.status === "CONFIRMED";
+      onSuccess(
+        d.message ??
+          (confirmed
+            ? "Reservation confirmed. The resource is booked for your selected time."
+            : "Reservation submitted and is pending admin approval.")
+      );
     } catch {
       onError("Network error. Please check your connection and try again.");
       onClose();
@@ -895,6 +913,11 @@ function BookingModal({
             <h3 className="text-lg font-semibold text-slate-900">Book Resource</h3>
             <p className="text-sm text-slate-500 font-medium">{resource.name}</p>
             <p className="text-xs text-slate-400">{resource.category.name}{resource.location ? ` · ${resource.location}` : ""}</p>
+            <p className="mt-1 text-xs font-medium text-slate-600">
+              {resource.requiresApproval !== false
+                ? "This booking will be sent for admin approval."
+                : "If the slot is available, this booking will be confirmed immediately."}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -982,7 +1005,7 @@ function BookingModal({
                   Submitting…
                 </span>
               ) : (
-                "Submit Booking"
+                resource.requiresApproval !== false ? "Submit for Approval" : "Confirm Booking"
               )}
             </button>
           </div>

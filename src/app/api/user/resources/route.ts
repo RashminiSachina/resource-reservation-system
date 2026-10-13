@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
       description: true,
       location: true,
       capacity: true,
+      requiresApproval: true,
       category: { select: { id: true, name: true } },
       // Only fetch overlapping active reservations if time window is provided
       ...(windowStart && windowEnd

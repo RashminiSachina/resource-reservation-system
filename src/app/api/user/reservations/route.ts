@@ -2,6 +2,11 @@ import { NextRequest } from "next/server";
 import { requireUserSession, AuthError } from "@/lib/session";
 import prisma from "@/lib/prisma";
 import { Prisma, ReservationStatus } from "@/generated/prisma/client";
+import {
+  BookingDomainError,
+  conflictError,
+  findOccupiedOverlap,
+} from "@/lib/reservation-conflicts";
 
 /** Minimum booking lead time: 1 minute from now */
 const MIN_LEAD_MS = 60 * 1000;
@@ -117,9 +122,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Verify resource exists and is active (outside transaction — fast pre-check)
+  // Missing requiresApproval on legacy rows is treated as true (admin approval required).
   const resource = await prisma.resource.findUnique({
     where: { id: resourceId.trim() },
-    select: { id: true, isActive: true, name: true },
+    select: { id: true, isActive: true, name: true, requiresApproval: true },
   });
   if (!resource || !resource.isActive) {
     return Response.json({ error: "Resource not found or unavailable." }, { status: 404 });
@@ -134,31 +140,25 @@ export async function POST(request: NextRequest) {
           // Re-verify resource is still active inside the transaction
           const activeResource = await tx.resource.findUnique({
             where: { id: resource.id },
-            select: { id: true, isActive: true },
+            select: { id: true, isActive: true, requiresApproval: true },
           });
           if (!activeResource || !activeResource.isActive) {
-            throw Object.assign(new Error("Resource is no longer available."), { code: "RESOURCE_INACTIVE" });
+            throw new BookingDomainError("RESOURCE_INACTIVE", "Resource is no longer available.");
           }
+
+          const status: ReservationStatus =
+            activeResource.requiresApproval !== false ? "PENDING" : "CONFIRMED";
 
           // Check for any overlapping PENDING or CONFIRMED reservations
           // Overlap: existing.startTime < end  AND  existing.endTime > start
-          const conflict = await tx.reservation.findFirst({
-            where: {
-              resourceId: resource.id,
-              status: { in: ["PENDING", "CONFIRMED"] },
-              startTime: { lt: end },
-              endTime: { gt: start },
-            },
-            select: { id: true, startTime: true, endTime: true },
+          const conflict = await findOccupiedOverlap(tx, {
+            resourceId: resource.id,
+            start,
+            end,
           });
 
           if (conflict) {
-            const cs = new Date(conflict.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-            const ce = new Date(conflict.endTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-            throw Object.assign(
-              new Error(`This resource is already booked from ${cs} to ${ce}. Please choose another time or resource.`),
-              { code: "BOOKING_CONFLICT" }
-            );
+            throw conflictError(conflict);
           }
 
           return tx.reservation.create({
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
               purpose: purpose.trim(),
               startTime: start,
               endTime: end,
-              status: "PENDING",
+              status,
             },
             select: {
               id: true,
@@ -186,7 +186,12 @@ export async function POST(request: NextRequest) {
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
       );
 
-      return Response.json({ message: "Reservation submitted.", reservation }, { status: 201 });
+      const message =
+        reservation.status === "CONFIRMED"
+          ? "Reservation confirmed. The resource is booked for your selected time."
+          : "Reservation submitted and is pending admin approval.";
+
+      return Response.json({ message, reservation }, { status: 201 });
     } catch (err) {
       // P2034 = Transaction failed due to serialization conflict; retry
       if (
@@ -197,13 +202,13 @@ export async function POST(request: NextRequest) {
         continue;
       }
       // Domain errors thrown inside the transaction
-      if (err instanceof Error && (err as NodeJS.ErrnoException & { code?: string }).code === "BOOKING_CONFLICT") {
+      if (err instanceof BookingDomainError && err.code === "BOOKING_CONFLICT") {
         return Response.json(
           { error: err.message },
           { status: 409 }
         );
       }
-      if (err instanceof Error && (err as NodeJS.ErrnoException & { code?: string }).code === "RESOURCE_INACTIVE") {
+      if (err instanceof BookingDomainError && err.code === "RESOURCE_INACTIVE") {
         return Response.json({ error: err.message }, { status: 409 });
       }
       // Unexpected errors

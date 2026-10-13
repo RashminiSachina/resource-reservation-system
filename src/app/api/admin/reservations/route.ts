@@ -2,6 +2,13 @@ import { NextRequest } from "next/server";
 import { requireAdminSession, AuthError } from "@/lib/session";
 import prisma from "@/lib/prisma";
 import { Prisma, ReservationStatus } from "@/generated/prisma/client";
+import {
+  BookingDomainError,
+  approvalConflictError,
+  findOccupiedOverlap,
+} from "@/lib/reservation-conflicts";
+
+const MAX_TX_RETRIES = 3;
 
 export async function GET(request: NextRequest) {
   try {
@@ -92,20 +99,118 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  const existing = await prisma.reservation.findUnique({
-    where: { id: reservationId.trim() },
-    select: { id: true, status: true },
-  });
+  const nextStatus = status as ReservationStatus;
 
-  if (!existing) {
-    return Response.json({ error: "Reservation not found." }, { status: 404 });
+  if (nextStatus !== "CONFIRMED") {
+    const existing = await prisma.reservation.findUnique({
+      where: { id: reservationId.trim() },
+      select: { id: true, status: true },
+    });
+
+    if (!existing) {
+      return Response.json({ error: "Reservation not found." }, { status: 404 });
+    }
+
+    const updated = await prisma.reservation.update({
+      where: { id: existing.id },
+      data: { status: nextStatus },
+      select: { id: true, status: true, user: { select: { id: true, name: true } }, resource: { select: { name: true } } },
+    });
+
+    return Response.json({ message: "Reservation updated.", reservation: updated }, { status: 200 });
   }
 
-  const updated = await prisma.reservation.update({
-    where: { id: existing.id },
-    data: { status: status as "PENDING" | "CONFIRMED" | "CANCELLED" },
-    select: { id: true, status: true, user: { select: { id: true, name: true } }, resource: { select: { name: true } } },
-  });
+  let lastError: unknown;
+  for (let attempt = 0; attempt < MAX_TX_RETRIES; attempt++) {
+    try {
+      const updated = await prisma.$transaction(
+        async (tx) => {
+          const existing = await tx.reservation.findUnique({
+            where: { id: reservationId.trim() },
+            select: {
+              id: true,
+              status: true,
+              resourceId: true,
+              startTime: true,
+              endTime: true,
+              resource: { select: { isActive: true, name: true } },
+            },
+          });
 
-  return Response.json({ message: "Reservation updated.", reservation: updated }, { status: 200 });
+          if (!existing) {
+            throw new BookingDomainError("NOT_FOUND", "Reservation not found.");
+          }
+
+          if (existing.status === "CONFIRMED") {
+            return tx.reservation.findUniqueOrThrow({
+              where: { id: existing.id },
+              select: {
+                id: true,
+                status: true,
+                user: { select: { id: true, name: true } },
+                resource: { select: { name: true } },
+              },
+            });
+          }
+
+          if (!existing.resource.isActive) {
+            throw new BookingDomainError(
+              "RESOURCE_INACTIVE",
+              "This resource is no longer available and cannot be approved."
+            );
+          }
+
+          const conflict = await findOccupiedOverlap(tx, {
+            resourceId: existing.resourceId,
+            start: existing.startTime,
+            end: existing.endTime,
+            excludeId: existing.id,
+            statuses: ["CONFIRMED"],
+          });
+
+          if (conflict) {
+            throw approvalConflictError(conflict);
+          }
+
+          return tx.reservation.update({
+            where: { id: existing.id },
+            data: { status: "CONFIRMED" },
+            select: {
+              id: true,
+              status: true,
+              user: { select: { id: true, name: true } },
+              resource: { select: { name: true } },
+            },
+          });
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+      );
+
+      return Response.json({ message: "Reservation approved.", reservation: updated }, { status: 200 });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === "P2034"
+      ) {
+        lastError = err;
+        continue;
+      }
+      if (err instanceof BookingDomainError && err.code === "NOT_FOUND") {
+        return Response.json({ error: err.message }, { status: 404 });
+      }
+      if (
+        err instanceof BookingDomainError &&
+        (err.code === "SLOT_UNAVAILABLE" || err.code === "RESOURCE_INACTIVE")
+      ) {
+        return Response.json({ error: err.message }, { status: 409 });
+      }
+      return Response.json({ error: "Failed to update reservation. Please try again." }, { status: 500 });
+    }
+  }
+
+  void lastError;
+  return Response.json(
+    { error: "The system is busy. Please try again in a moment." },
+    { status: 503 }
+  );
 }

@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
         location: true,
         capacity: true,
         isActive: true,
+        requiresApproval: true,
         createdAt: true,
         category: { select: { id: true, name: true } },
         _count: { select: { reservations: true } },
@@ -70,6 +71,7 @@ export async function POST(request: NextRequest) {
     location?: unknown;
     capacity?: unknown;
     categoryId?: unknown;
+    requiresApproval?: unknown;
   };
   try {
     body = await request.json();
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { name, description, location, capacity, categoryId } = body;
+  const { name, description, location, capacity, categoryId, requiresApproval } = body;
 
   if (typeof name !== "string" || !name.trim()) {
     return Response.json({ error: "Resource name is required." }, { status: 400 });
@@ -114,6 +116,10 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Description cannot exceed 1000 characters." }, { status: 400 });
   }
 
+  if (requiresApproval !== undefined && typeof requiresApproval !== "boolean") {
+    return Response.json({ error: "requiresApproval must be a boolean." }, { status: 400 });
+  }
+
   const category = await prisma.resourceCategory.findUnique({
     where: { id: categoryId.trim() },
     select: { id: true },
@@ -146,6 +152,7 @@ export async function POST(request: NextRequest) {
         capacity: Math.floor(capacity),
         categoryId: category.id,
         isActive: true,
+        requiresApproval: typeof requiresApproval === "boolean" ? requiresApproval : true,
       },
       select: {
         id: true,
@@ -154,6 +161,7 @@ export async function POST(request: NextRequest) {
         location: true,
         capacity: true,
         isActive: true,
+        requiresApproval: true,
         createdAt: true,
         category: { select: { id: true, name: true } },
         _count: { select: { reservations: true } },
@@ -184,6 +192,7 @@ export async function PATCH(request: NextRequest) {
     capacity?: unknown;
     categoryId?: unknown;
     isActive?: unknown;
+    requiresApproval?: unknown;
   };
   try {
     body = await request.json();
@@ -191,7 +200,7 @@ export async function PATCH(request: NextRequest) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { resourceId, name, description, location, capacity, categoryId, isActive } = body;
+  const { resourceId, name, description, location, capacity, categoryId, isActive, requiresApproval } = body;
 
   if (typeof resourceId !== "string" || !resourceId.trim()) {
     return Response.json({ error: "Resource ID is required." }, { status: 400 });
@@ -214,6 +223,10 @@ export async function PATCH(request: NextRequest) {
     if (!cat) return Response.json({ error: "Category not found." }, { status: 404 });
   }
 
+  if (requiresApproval !== undefined && typeof requiresApproval !== "boolean") {
+    return Response.json({ error: "requiresApproval must be a boolean." }, { status: 400 });
+  }
+
   const updated = await prisma.resource.update({
     where: { id: existing.id },
     data: {
@@ -223,6 +236,7 @@ export async function PATCH(request: NextRequest) {
       ...(typeof capacity === "number" ? { capacity: capacity > 0 ? Math.floor(capacity) : null } : {}),
       ...(typeof categoryId === "string" && categoryId.trim() ? { categoryId: categoryId.trim() } : {}),
       ...(typeof isActive === "boolean" ? { isActive } : {}),
+      ...(typeof requiresApproval === "boolean" ? { requiresApproval } : {}),
     },
     select: {
       id: true,
@@ -231,6 +245,7 @@ export async function PATCH(request: NextRequest) {
       location: true,
       capacity: true,
       isActive: true,
+      requiresApproval: true,
       category: { select: { id: true, name: true } },
     },
   });
