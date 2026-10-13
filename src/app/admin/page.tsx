@@ -380,6 +380,12 @@ export default function AdminDashboardPage() {
             >
               User Dashboard
             </Link>
+            <Link
+              href="/profile"
+              className="text-xs font-medium text-slate-600 hover:text-indigo-600 transition"
+            >
+              Profile
+            </Link>
             <span className="text-sm text-slate-700 font-medium hidden sm:inline">{currentAdmin?.name}</span>
             <button
               onClick={() => void handleLogout()}

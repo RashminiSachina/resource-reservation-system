@@ -75,6 +75,12 @@ export default function Navbar() {
               >
                 Dashboard
               </Link>
+              <Link
+                href="/profile"
+                className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+              >
+                Profile
+              </Link>
               <span className="text-xs text-slate-500">
                 Hi, <strong className="text-slate-800">{user.name}</strong>
               </span>
@@ -157,6 +163,13 @@ export default function Navbar() {
                   onClick={() => setMenuOpen(false)}
                 >
                   Dashboard
+                </Link>
+                <Link
+                  href="/profile"
+                  className="rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Profile
                 </Link>
                 <button
                   onClick={() => {

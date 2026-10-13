@@ -332,6 +332,12 @@ export default function UserDashboard() {
               <span className="text-sm font-medium text-slate-800">{user?.name}</span>
               <span className="text-xs text-slate-400">{user?.email}</span>
             </div>
+            <Link
+              href="/profile"
+              className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition"
+            >
+              Profile
+            </Link>
             {user?.role === "ADMIN" && (
               <Link
                 href="/admin"
