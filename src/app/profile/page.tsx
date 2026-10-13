@@ -162,10 +162,10 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen flex-col bg-slate-50">
+      <div className="flex min-h-screen flex-col bg-[#FAFAF9]">
         <Navbar />
         <main className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0052CC] border-t-transparent" />
         </main>
         <Footer />
       </div>
@@ -174,10 +174,10 @@ export default function ProfilePage() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen flex-col bg-slate-50">
+      <div className="flex min-h-screen flex-col bg-[#FAFAF9]">
         <Navbar />
         <main className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
-          <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-4 text-red-800">{error}</div>
+          <div className="rounded-lg border border-rose-200 bg-rose-50 px-6 py-4 text-rose-800">{error}</div>
         </main>
         <Footer />
       </div>
@@ -197,28 +197,28 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-[#FAFAF9]">
       <Navbar />
       <main className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Profile</h1>
-            <p className="mt-2 text-sm text-slate-600">Manage your account information and security settings.</p>
+            <h1 className="text-3xl font-semibold text-[#1A1A1A]">Profile</h1>
+            <p className="mt-2 text-sm text-[#6B7280]">Manage your account information and security settings.</p>
           </div>
 
           <div className="space-y-6">
             {/* Profile Information Section */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Profile Information</h2>
+            <div className="rounded-lg border border-[#E5E7EB] bg-white p-6">
+              <h2 className="text-lg font-medium text-[#1A1A1A] mb-4">Profile Information</h2>
               
               {profileSuccess && (
-                <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                <div className="mb-4 rounded-md border border-[#84CC16]/30 bg-[#84CC16]/10 px-4 py-3 text-sm text-[#6DB30F]">
                   Profile updated successfully.
                 </div>
               )}
 
               {profileErrors.form && (
-                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                <div className="mb-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
                   {profileErrors.form}
                 </div>
               )}
@@ -226,7 +226,7 @@ export default function ProfilePage() {
               <form onSubmit={handleProfileUpdate} className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Name</label>
+                    <label className="mb-1.5 block text-sm font-medium text-[#6B7280]">Name</label>
                     <input
                       type="text"
                       value={name}
@@ -234,44 +234,44 @@ export default function ProfilePage() {
                         setName(e.target.value);
                         setProfileErrors((prev) => ({ ...prev, name: undefined, form: undefined }));
                       }}
-                      className={`block w-full rounded-lg border px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        profileErrors.name ? "border-red-400 bg-red-50" : "border-slate-300 bg-white"
+                      className={`block w-full rounded-md border px-4 py-2.5 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] ${
+                        profileErrors.name ? "border-rose-400 bg-rose-50" : "border-[#E5E7EB] bg-white"
                       }`}
                       disabled={profileLoading}
                     />
                     {profileErrors.name && (
-                      <p className="mt-1.5 text-xs text-red-600">{profileErrors.name}</p>
+                      <p className="mt-1.5 text-xs text-rose-600">{profileErrors.name}</p>
                     )}
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
+                    <label className="mb-1.5 block text-sm font-medium text-[#6B7280]">Email</label>
                     <input
                       type="email"
                       value={user.email}
                       disabled
-                      className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500 shadow-sm"
+                      className="block w-full rounded-md border border-[#E5E7EB] bg-[#F3F4F6] px-4 py-2.5 text-sm text-[#9CA3AF]"
                     />
-                    <p className="mt-1.5 text-xs text-slate-400">Email cannot be changed</p>
+                    <p className="mt-1.5 text-xs text-[#9CA3AF]">Email cannot be changed</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Role</label>
+                    <label className="mb-1.5 block text-sm font-medium text-[#6B7280]">Role</label>
                     <input
                       type="text"
                       value={user.role}
                       disabled
-                      className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500 shadow-sm capitalize"
+                      className="block w-full rounded-md border border-[#E5E7EB] bg-[#F3F4F6] px-4 py-2.5 text-sm text-[#9CA3AF] capitalize"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Account Created</label>
+                    <label className="mb-1.5 block text-sm font-medium text-[#6B7280]">Account Created</label>
                     <input
                       type="text"
                       value={formatDate(user.createdAt)}
                       disabled
-                      className="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500 shadow-sm"
+                      className="block w-full rounded-md border border-[#E5E7EB] bg-[#F3F4F6] px-4 py-2.5 text-sm text-[#9CA3AF]"
                     />
                   </div>
                 </div>
@@ -280,7 +280,7 @@ export default function ProfilePage() {
                   <button
                     type="submit"
                     disabled={profileLoading}
-                    className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-md bg-[#0052CC] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#0047B3] focus:outline-none focus:ring-1 focus:ring-[#0052CC] disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
                   >
                     {profileLoading ? "Saving..." : "Save Changes"}
                   </button>
@@ -290,24 +290,24 @@ export default function ProfilePage() {
 
             {/* Change Password Section - Only for password-based users */}
             {user.hasPassword && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">Change Password</h2>
+              <div className="rounded-lg border border-[#E5E7EB] bg-white p-6">
+                <h2 className="text-lg font-medium text-[#1A1A1A] mb-4">Change Password</h2>
                 
                 {passwordSuccess && (
-                  <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  <div className="mb-4 rounded-md border border-[#84CC16]/30 bg-[#84CC16]/10 px-4 py-3 text-sm text-[#6DB30F]">
                     Password changed successfully.
                   </div>
                 )}
 
                 {passwordErrors.form && (
-                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                  <div className="mb-4 rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
                     {passwordErrors.form}
                   </div>
                 )}
 
                 <form onSubmit={handlePasswordChange} className="space-y-4">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Current Password</label>
+                    <label className="mb-1.5 block text-sm font-medium text-[#6B7280]">Current Password</label>
                     <div className="relative">
                       <input
                         type={showCurrent ? "text" : "password"}
@@ -316,22 +316,22 @@ export default function ProfilePage() {
                           setCurrentPassword(e.target.value);
                           setPasswordErrors((prev) => ({ ...prev, currentPassword: undefined, form: undefined }));
                         }}
-                        className={`block w-full rounded-lg border px-4 py-2.5 pr-11 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                          passwordErrors.currentPassword ? "border-red-400 bg-red-50" : "border-slate-300 bg-white"
+                        className={`block w-full rounded-md border px-4 py-2.5 pr-11 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] ${
+                          passwordErrors.currentPassword ? "border-rose-400 bg-rose-50" : "border-[#E5E7EB] bg-white"
                         }`}
                         disabled={passwordLoading}
                       />
                       <button
                         type="button"
                         onClick={() => setShowCurrent(!showCurrent)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors"
                       >
                         {showCurrent ? (
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
                           </svg>
                         ) : (
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                           </svg>
@@ -339,12 +339,12 @@ export default function ProfilePage() {
                       </button>
                     </div>
                     {passwordErrors.currentPassword && (
-                      <p className="mt-1.5 text-xs text-red-600">{passwordErrors.currentPassword}</p>
+                      <p className="mt-1.5 text-xs text-rose-600">{passwordErrors.currentPassword}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">New Password</label>
+                    <label className="mb-1.5 block text-sm font-medium text-[#6B7280]">New Password</label>
                     <div className="relative">
                       <input
                         type={showNew ? "text" : "password"}
@@ -353,8 +353,8 @@ export default function ProfilePage() {
                           setNewPassword(e.target.value);
                           setPasswordErrors((prev) => ({ ...prev, newPassword: undefined, form: undefined }));
                         }}
-                        className={`block w-full rounded-lg border px-4 py-2.5 pr-11 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                          passwordErrors.newPassword ? "border-red-400 bg-red-50" : "border-slate-300 bg-white"
+                        className={`block w-full rounded-md border px-4 py-2.5 pr-11 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] ${
+                          passwordErrors.newPassword ? "border-rose-400 bg-rose-50" : "border-[#E5E7EB] bg-white"
                         }`}
                         placeholder="Min. 8 characters"
                         disabled={passwordLoading}
@@ -362,14 +362,14 @@ export default function ProfilePage() {
                       <button
                         type="button"
                         onClick={() => setShowNew(!showNew)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors"
                       >
                         {showNew ? (
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
                           </svg>
                         ) : (
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                           </svg>
@@ -377,12 +377,12 @@ export default function ProfilePage() {
                       </button>
                     </div>
                     {passwordErrors.newPassword && (
-                      <p className="mt-1.5 text-xs text-red-600">{passwordErrors.newPassword}</p>
+                      <p className="mt-1.5 text-xs text-rose-600">{passwordErrors.newPassword}</p>
                     )}
                   </div>
 
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">Confirm New Password</label>
+                    <label className="mb-1.5 block text-sm font-medium text-[#6B7280]">Confirm New Password</label>
                     <div className="relative">
                       <input
                         type={showConfirm ? "text" : "password"}
@@ -391,8 +391,8 @@ export default function ProfilePage() {
                           setConfirmPassword(e.target.value);
                           setPasswordErrors((prev) => ({ ...prev, confirmPassword: undefined, form: undefined }));
                         }}
-                        className={`block w-full rounded-lg border px-4 py-2.5 pr-11 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                          passwordErrors.confirmPassword ? "border-red-400 bg-red-50" : "border-slate-300 bg-white"
+                        className={`block w-full rounded-md border px-4 py-2.5 pr-11 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] ${
+                          passwordErrors.confirmPassword ? "border-rose-400 bg-rose-50" : "border-[#E5E7EB] bg-white"
                         }`}
                         placeholder="Re-enter your new password"
                         disabled={passwordLoading}
@@ -400,14 +400,14 @@ export default function ProfilePage() {
                       <button
                         type="button"
                         onClick={() => setShowConfirm(!showConfirm)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors"
                       >
                         {showConfirm ? (
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
                           </svg>
                         ) : (
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                           </svg>
@@ -415,7 +415,7 @@ export default function ProfilePage() {
                       </button>
                     </div>
                     {passwordErrors.confirmPassword && (
-                      <p className="mt-1.5 text-xs text-red-600">{passwordErrors.confirmPassword}</p>
+                      <p className="mt-1.5 text-xs text-rose-600">{passwordErrors.confirmPassword}</p>
                     )}
                   </div>
 
@@ -423,7 +423,7 @@ export default function ProfilePage() {
                     <button
                       type="submit"
                       disabled={passwordLoading}
-                      className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-md bg-[#0052CC] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#0047B3] focus:outline-none focus:ring-1 focus:ring-[#0052CC] disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
                     >
                       {passwordLoading ? "Changing Password..." : "Change Password"}
                     </button>
@@ -433,9 +433,9 @@ export default function ProfilePage() {
             )}
 
             {!user.hasPassword && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">Change Password</h2>
-                <p className="text-sm text-slate-600">
+              <div className="rounded-lg border border-[#E5E7EB] bg-white p-6">
+                <h2 className="text-lg font-medium text-[#1A1A1A] mb-4">Change Password</h2>
+                <p className="text-sm text-[#6B7280]">
                   Your account uses OAuth authentication (e.g., Google). Password-based authentication is not enabled for your account.
                 </p>
               </div>

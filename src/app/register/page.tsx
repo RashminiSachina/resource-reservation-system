@@ -104,22 +104,22 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-[#FAFAF9]">
       <Navbar />
       <main className="flex flex-1 items-center justify-center px-4 py-12 sm:px-6">
         <div className="w-full max-w-md">
           {/* Card */}
-          <div className="rounded-2xl border border-slate-200 bg-white px-8 py-10 shadow-sm">
+          <div className="rounded-lg border border-[#E5E7EB] bg-white px-8 py-10">
             <div className="mb-8 text-center">
               <Link href="/" className="inline-block" aria-label="ReserveIt Home">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white text-lg font-bold shadow hover:bg-indigo-700 transition">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-md bg-[#0052CC] text-white text-lg font-medium hover:bg-[#0047B3] transition-colors">
                   R
                 </div>
               </Link>
-              <h1 className="text-2xl font-bold text-slate-900">Create your account</h1>
-              <p className="mt-1 text-sm text-slate-500">
+              <h1 className="text-2xl font-semibold text-[#1A1A1A]">Create your account</h1>
+              <p className="mt-1 text-sm text-[#6B7280]">
                 Already have an account?{" "}
-                <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-700">
+                <Link href="/login" className="font-medium text-[#0052CC] hover:text-[#0047B3] transition-colors">
                   Sign in
                 </Link>
               </p>
@@ -129,19 +129,19 @@ export default function RegisterPage() {
               <div
                 id="register-success"
                 role="status"
-                className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-center"
+                className="rounded-md border border-[#84CC16]/30 bg-[#84CC16]/10 p-5 text-center"
               >
                 <svg
-                  className="mx-auto mb-3 h-10 w-10 text-emerald-500"
+                  className="mx-auto mb-3 h-10 w-10 text-[#6DB30F]"
                   fill="none"
                   viewBox="0 0 24 24"
-                  strokeWidth={1.8}
+                  strokeWidth={1.5}
                   stroke="currentColor"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
-                <h2 className="text-base font-semibold text-emerald-800">Account created!</h2>
-                <p className="mt-1 text-sm text-emerald-700">
+                <h2 className="text-base font-medium text-[#6DB30F]">Account created!</h2>
+                <p className="mt-1 text-sm text-[#6DB30F]">
                   Your account is ready.{" "}
                   <Link href="/login" className="font-medium underline">
                     Sign in now →
@@ -155,7 +155,7 @@ export default function RegisterPage() {
                   <div
                     id="register-form-error"
                     role="alert"
-                    className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+                    className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
                   >
                     {errors.form}
                   </div>
@@ -163,7 +163,7 @@ export default function RegisterPage() {
 
                 {/* Full name */}
                 <div>
-                  <label htmlFor="register-name" className="mb-1.5 block text-sm font-medium text-slate-700">
+                  <label htmlFor="register-name" className="mb-1.5 block text-sm font-medium text-[#6B7280]">
                     Full name
                   </label>
                   <input
@@ -175,14 +175,14 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     aria-describedby={errors.name ? "register-name-error" : undefined}
                     aria-invalid={!!errors.name}
-                    className={`block w-full rounded-lg border px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                      errors.name ? "border-red-400 bg-red-50" : "border-slate-300 bg-white"
+                    className={`block w-full rounded-md border px-4 py-2.5 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] ${
+                      errors.name ? "border-rose-400 bg-rose-50" : "border-[#E5E7EB] bg-white"
                     }`}
                     placeholder="Jane Smith"
                     disabled={loading}
                   />
                   {errors.name && (
-                    <p id="register-name-error" role="alert" className="mt-1.5 text-xs text-red-600">
+                    <p id="register-name-error" role="alert" className="mt-1.5 text-xs text-rose-600">
                       {errors.name}
                     </p>
                   )}
@@ -190,7 +190,7 @@ export default function RegisterPage() {
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="register-email" className="mb-1.5 block text-sm font-medium text-slate-700">
+                  <label htmlFor="register-email" className="mb-1.5 block text-sm font-medium text-[#6B7280]">
                     Email address
                   </label>
                   <input
@@ -202,14 +202,14 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     aria-describedby={errors.email ? "register-email-error" : undefined}
                     aria-invalid={!!errors.email}
-                    className={`block w-full rounded-lg border px-4 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                      errors.email ? "border-red-400 bg-red-50" : "border-slate-300 bg-white"
+                    className={`block w-full rounded-md border px-4 py-2.5 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] ${
+                      errors.email ? "border-rose-400 bg-rose-50" : "border-[#E5E7EB] bg-white"
                     }`}
                     placeholder="jane@example.com"
                     disabled={loading}
                   />
                   {errors.email && (
-                    <p id="register-email-error" role="alert" className="mt-1.5 text-xs text-red-600">
+                    <p id="register-email-error" role="alert" className="mt-1.5 text-xs text-rose-600">
                       {errors.email}
                     </p>
                   )}
@@ -217,7 +217,7 @@ export default function RegisterPage() {
 
                 {/* Password */}
                 <div>
-                  <label htmlFor="register-password" className="mb-1.5 block text-sm font-medium text-slate-700">
+                  <label htmlFor="register-password" className="mb-1.5 block text-sm font-medium text-[#6B7280]">
                     Password
                   </label>
                   <div className="relative">
@@ -230,8 +230,8 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       aria-describedby={errors.password ? "register-password-error" : "register-password-hint"}
                       aria-invalid={!!errors.password}
-                      className={`block w-full rounded-lg border px-4 py-2.5 pr-11 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        errors.password ? "border-red-400 bg-red-50" : "border-slate-300 bg-white"
+                      className={`block w-full rounded-md border px-4 py-2.5 pr-11 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] ${
+                        errors.password ? "border-rose-400 bg-rose-50" : "border-[#E5E7EB] bg-white"
                       }`}
                       placeholder="Min. 8 characters"
                       disabled={loading}
@@ -241,15 +241,15 @@ export default function RegisterPage() {
                       id="register-toggle-password"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors"
                       tabIndex={0}
                     >
                       {showPassword ? (
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
                         </svg>
                       ) : (
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                         </svg>
@@ -257,11 +257,11 @@ export default function RegisterPage() {
                     </button>
                   </div>
                   {errors.password ? (
-                    <p id="register-password-error" role="alert" className="mt-1.5 text-xs text-red-600">
+                    <p id="register-password-error" role="alert" className="mt-1.5 text-xs text-rose-600">
                       {errors.password}
                     </p>
                   ) : (
-                    <p id="register-password-hint" className="mt-1.5 text-xs text-slate-500">
+                    <p id="register-password-hint" className="mt-1.5 text-xs text-[#9CA3AF]">
                       Must be at least 8 characters.
                     </p>
                   )}
@@ -269,7 +269,7 @@ export default function RegisterPage() {
 
                 {/* Confirm password */}
                 <div>
-                  <label htmlFor="register-confirm-password" className="mb-1.5 block text-sm font-medium text-slate-700">
+                  <label htmlFor="register-confirm-password" className="mb-1.5 block text-sm font-medium text-[#6B7280]">
                     Confirm password
                   </label>
                   <div className="relative">
@@ -282,8 +282,8 @@ export default function RegisterPage() {
                       onChange={handleChange}
                       aria-describedby={errors.confirmPassword ? "register-confirm-error" : undefined}
                       aria-invalid={!!errors.confirmPassword}
-                      className={`block w-full rounded-lg border px-4 py-2.5 pr-11 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
-                        errors.confirmPassword ? "border-red-400 bg-red-50" : "border-slate-300 bg-white"
+                      className={`block w-full rounded-md border px-4 py-2.5 pr-11 text-sm text-[#1A1A1A] outline-none transition-colors placeholder:text-[#9CA3AF] focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] ${
+                        errors.confirmPassword ? "border-rose-400 bg-rose-50" : "border-[#E5E7EB] bg-white"
                       }`}
                       placeholder="Re-enter your password"
                       disabled={loading}
@@ -293,15 +293,15 @@ export default function RegisterPage() {
                       id="register-toggle-confirm"
                       aria-label={showConfirm ? "Hide confirm password" : "Show confirm password"}
                       onClick={() => setShowConfirm((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#1A1A1A] transition-colors"
                       tabIndex={0}
                     >
                       {showConfirm ? (
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
                         </svg>
                       ) : (
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                         </svg>
@@ -309,7 +309,7 @@ export default function RegisterPage() {
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p id="register-confirm-error" role="alert" className="mt-1.5 text-xs text-red-600">
+                    <p id="register-confirm-error" role="alert" className="mt-1.5 text-xs text-rose-600">
                       {errors.confirmPassword}
                     </p>
                   )}
@@ -319,7 +319,7 @@ export default function RegisterPage() {
                   id="register-submit"
                   type="submit"
                   disabled={loading}
-                  className="mt-2 flex h-11 w-full items-center justify-center rounded-xl bg-indigo-600 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-2 flex h-11 w-full items-center justify-center rounded-md bg-[#0052CC] text-sm font-medium text-white hover:bg-[#0047B3] focus:outline-none focus:ring-1 focus:ring-[#0052CC] disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
@@ -334,15 +334,15 @@ export default function RegisterPage() {
                   )}
                 </button>
 
-                <p className="text-center text-xs text-slate-500">
+                <p className="text-center text-xs text-[#9CA3AF]">
                   By registering you agree to our terms of service.
                 </p>
               </form>
             )}
           </div>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
-            <Link href="/" className="font-medium text-indigo-600 hover:text-indigo-700">
+          <p className="mt-6 text-center text-sm text-[#6B7280]">
+            <Link href="/" className="font-medium text-[#0052CC] hover:text-[#0047B3] transition-colors">
               ← Back to homepage
             </Link>
           </p>
