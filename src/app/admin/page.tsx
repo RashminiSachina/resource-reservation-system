@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
+import NotificationBell from "@/components/NotificationBell";
 
 type Tab = "overview" | "users" | "resources" | "categories" | "reservations";
 type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
@@ -380,6 +381,7 @@ export default function AdminDashboardPage() {
             >
               User Dashboard
             </Link>
+            {currentAdmin && <NotificationBell userId={currentAdmin.id} />}
             <span className="text-sm text-slate-700 font-medium hidden sm:inline">{currentAdmin?.name}</span>
             <button
               onClick={() => void handleLogout()}
