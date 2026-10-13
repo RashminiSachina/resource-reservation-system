@@ -7,6 +7,7 @@ import {
   approvalConflictError,
   findOccupiedOverlap,
 } from "@/lib/reservation-conflicts";
+import { createNotification, getActiveAdminUserIds } from "@/lib/notifications";
 
 const MAX_TX_RETRIES = 3;
 
@@ -101,21 +102,45 @@ export async function PATCH(request: NextRequest) {
 
   const nextStatus = status as ReservationStatus;
 
+  // Fetch reservation details for notification
+  const reservation = await prisma.reservation.findUnique({
+    where: { id: reservationId.trim() },
+    select: {
+      id: true,
+      status: true,
+      userId: true,
+      user: { select: { id: true, name: true } },
+      resource: { select: { name: true } },
+      startTime: true,
+      endTime: true,
+    },
+  });
+
+  if (!reservation) {
+    return Response.json({ error: "Reservation not found." }, { status: 404 });
+  }
+
+  // If status is not changing, return early
+  if (reservation.status === nextStatus) {
+    return Response.json({ message: "Reservation already has this status.", reservation }, { status: 200 });
+  }
+
   if (nextStatus !== "CONFIRMED") {
-    const existing = await prisma.reservation.findUnique({
-      where: { id: reservationId.trim() },
-      select: { id: true, status: true },
-    });
-
-    if (!existing) {
-      return Response.json({ error: "Reservation not found." }, { status: 404 });
-    }
-
     const updated = await prisma.reservation.update({
-      where: { id: existing.id },
+      where: { id: reservation.id },
       data: { status: nextStatus },
       select: { id: true, status: true, user: { select: { id: true, name: true } }, resource: { select: { name: true } } },
     });
+
+    // Send notification to user
+    if (nextStatus === "CANCELLED") {
+      await createNotification({
+        userId: reservation.userId,
+        title: "Reservation Cancelled",
+        message: `Your reservation for ${reservation.resource.name} has been cancelled by an admin.`,
+        type: "RESERVATION_CANCELLED",
+      });
+    }
 
     return Response.json({ message: "Reservation updated.", reservation: updated }, { status: 200 });
   }
@@ -185,6 +210,14 @@ export async function PATCH(request: NextRequest) {
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
       );
+
+      // Send notification to user about approval
+      await createNotification({
+        userId: reservation.userId,
+        title: "Reservation Approved",
+        message: `Your reservation for ${reservation.resource.name} has been approved.`,
+        type: "RESERVATION_CONFIRMED",
+      });
 
       return Response.json({ message: "Reservation approved.", reservation: updated }, { status: 200 });
     } catch (err) {

@@ -7,6 +7,7 @@ import {
   conflictError,
   findOccupiedOverlap,
 } from "@/lib/reservation-conflicts";
+import { createNotification, createBulkNotifications, getActiveAdminUserIds } from "@/lib/notifications";
 
 /** Minimum booking lead time: 1 minute from now */
 const MIN_LEAD_MS = 60 * 1000;
@@ -190,6 +191,17 @@ export async function POST(request: NextRequest) {
         reservation.status === "CONFIRMED"
           ? "Reservation confirmed. The resource is booked for your selected time."
           : "Reservation submitted and is pending admin approval.";
+
+      // Notify all admins about the new reservation
+      const adminIds = await getActiveAdminUserIds();
+      if (adminIds.length > 0) {
+        await createBulkNotifications({
+          userIds: adminIds,
+          title: "New Reservation Request",
+          message: `${user.name} has booked ${resource.name} for ${new Date(start).toLocaleString()}. Status: ${reservation.status}`,
+          type: "RESERVATION_UPDATED",
+        });
+      }
 
       return Response.json({ message, reservation }, { status: 201 });
     } catch (err) {

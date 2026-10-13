@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { requireAdminSession, AuthError } from "@/lib/session";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
+import { createBulkNotifications, getActiveRegularUserIds } from "@/lib/notifications";
 
 export async function GET(request: NextRequest) {
   try {
@@ -167,6 +168,17 @@ export async function POST(request: NextRequest) {
         _count: { select: { reservations: true } },
       },
     });
+
+    // Notify all active users about the new resource
+    const userIds = await getActiveRegularUserIds();
+    if (userIds.length > 0) {
+      await createBulkNotifications({
+        userIds,
+        title: "New Resource Available",
+        message: `A new resource "${resource.name}" has been added in ${resource.location}.`,
+        type: "NEW_RESOURCE",
+      });
+    }
 
     return Response.json({ message: "Resource created successfully.", resource }, { status: 201 });
   } catch {

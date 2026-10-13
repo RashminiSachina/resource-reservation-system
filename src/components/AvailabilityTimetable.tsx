@@ -13,7 +13,7 @@ interface AvailabilityTimetableProps {
   resourceId: string;
   resourceName: string;
   categoryName: string;
-  onSlotSelect: (startTime: string, endTime: string) => void;
+  onSlotSelect: (startTime: string) => void;
   onClose: () => void;
 }
 
@@ -78,14 +78,20 @@ export default function AvailabilityTimetable({
     fetchReservations();
   }, [resourceId, selectedDate]);
 
-  // Generate hourly slots for the day
+  // Generate hourly slots for the day (using local time)
   const generateHourlySlots = () => {
     const slots = [];
+    const now = new Date();
+    const isToday = selectedDate.toDateString() === now.toDateString();
+
     for (let hour = 0; hour < 24; hour++) {
       const start = new Date(selectedDate);
-      start.setUTCHours(hour, 0, 0, 0);
+      start.setHours(hour, 0, 0, 0);
       const end = new Date(selectedDate);
-      end.setUTCHours(hour + 1, 0, 0, 0);
+      end.setHours(hour + 1, 0, 0, 0);
+
+      // Check if this slot is in the past (for today only)
+      const isPast = isToday && end <= now;
 
       // Check if this slot overlaps with any reservation
       const isBooked = reservations.some((res) => {
@@ -99,6 +105,7 @@ export default function AvailabilityTimetable({
         start: start.toISOString(),
         end: end.toISOString(),
         isBooked,
+        isPast,
       });
     }
     return slots;
@@ -106,14 +113,14 @@ export default function AvailabilityTimetable({
 
   const hourlySlots = generateHourlySlots();
 
-  const handleSlotClick = (slot: { start: string; end: string; isBooked: boolean }) => {
-    if (slot.isBooked) return;
+  const handleSlotClick = (slot: { start: string; end: string; isBooked: boolean; isPast: boolean }) => {
+    if (slot.isBooked || slot.isPast) return;
     setSelectedSlot({ start: slot.start, end: slot.end });
   };
 
   const handleConfirmSelection = () => {
     if (selectedSlot) {
-      onSlotSelect(selectedSlot.start, selectedSlot.end);
+      onSlotSelect(selectedSlot.start);
     }
   };
 
@@ -197,16 +204,17 @@ export default function AvailabilityTimetable({
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-2">
               {hourlySlots.map((slot) => {
                 const isSelected = selectedSlot?.start === slot.start;
+                const isDisabled = slot.isBooked || slot.isPast;
                 return (
                   <button
                     key={slot.hour}
                     onClick={() => handleSlotClick(slot)}
-                    disabled={slot.isBooked}
+                    disabled={isDisabled}
                     className={`
                       rounded-lg p-3 text-center transition-all
                       ${
-                        slot.isBooked
-                          ? "bg-gradient-to-r from-rose-100 to-pink-100 border border-rose-200 cursor-not-allowed opacity-60"
+                        isDisabled
+                          ? "bg-gradient-to-r from-gray-100 to-gray-200 border border-gray-300 cursor-not-allowed opacity-60"
                           : isSelected
                           ? "bg-gradient-to-r from-[#0052CC] to-[#0047B3] border border-[#0047B3] text-white shadow-md"
                           : "bg-gradient-to-r from-emerald-100 to-green-100 border border-emerald-200 hover:from-emerald-200 hover:to-green-200 cursor-pointer"

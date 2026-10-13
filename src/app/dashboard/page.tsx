@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
 import AvailabilityTimetable from "@/components/AvailabilityTimetable";
+import NotificationBell from "@/components/NotificationBell";
 
 // ---- Types ----
 type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
@@ -338,6 +339,7 @@ export default function UserDashboard() {
               <span className="text-sm font-medium text-[#1A1A1A]">{user?.name}</span>
               <span className="text-xs text-[#6B7280]">{user?.email}</span>
             </div>
+            <NotificationBell userId={user?.id || ""} />
             <Link
               href="/profile"
               className="text-sm font-medium text-[#374151] hover:text-[#0052CC] transition-colors"
@@ -792,7 +794,6 @@ export default function UserDashboard() {
         <BookingModal
           resource={bookingModal.resource}
           initialStart={bookingModal.startTime}
-          initialEnd={bookingModal.endTime}
           onClose={() => setBookingModal(null)}
           onSuccess={(msg) => {
             setBookingModal(null);
@@ -819,12 +820,12 @@ export default function UserDashboard() {
           resourceId={timetableModal.resource.id}
           resourceName={timetableModal.resource.name}
           categoryName={timetableModal.resource.category.name}
-          onSlotSelect={(startTime, endTime) => {
+          onSlotSelect={(startTime) => {
             setTimetableModal(null);
             setBookingModal({
               resource: timetableModal.resource,
               startTime,
-              endTime,
+              endTime: "", // Will be set by user in booking modal
             });
           }}
           onClose={() => setTimetableModal(null)}
@@ -886,23 +887,58 @@ function BookingCard({
 function BookingModal({
   resource,
   initialStart,
-  initialEnd,
   onClose,
   onSuccess,
   onError,
 }: {
   resource: ResourceCard;
   initialStart: string;
-  initialEnd: string;
   onClose: () => void;
   onSuccess: (message: string) => void;
   onError: (message: string) => void;
 }) {
   const [purpose, setPurpose] = useState("");
   const [startTime, setStartTime] = useState(initialStart);
-  const [endTime, setEndTime] = useState(initialEnd);
+  const [endTime, setEndTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // Generate end-time options (1-8 hours after start time)
+  const generateEndTimeOptions = () => {
+    const options = [];
+    const start = new Date(startTime);
+
+    for (let hours = 1; hours <= 8; hours++) {
+      const end = new Date(start);
+      end.setHours(start.getHours() + hours);
+
+      // Format for datetime-local input
+      const formatForInput = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hour = String(date.getHours()).padStart(2, '0');
+        const minute = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hour}:${minute}`;
+      };
+
+      options.push({
+        value: formatForInput(end),
+        label: `${hours} hour${hours > 1 ? 's' : ''}`,
+        isoString: end.toISOString(),
+      });
+    }
+    return options;
+  };
+
+  const endTimeOptions = generateEndTimeOptions();
+
+  // Auto-select first end time option when start time changes
+  useEffect(() => {
+    if (startTime && !endTime && endTimeOptions.length > 0) {
+      setEndTime(endTimeOptions[0].value);
+    }
+  }, [startTime]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -1005,23 +1041,28 @@ function BookingModal({
                 required
                 type="datetime-local"
                 value={startTime}
-                disabled={loading}
-                onChange={(e) => setStartTime(e.target.value)}
-                className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] disabled:opacity-75 transition-colors"
+                disabled
+                className="w-full rounded-md border border-[#E5E7EB] bg-[#F3F4F6] px-3 py-2 text-sm text-[#9CA3AF] outline-none disabled:opacity-75 transition-colors"
               />
+              <p className="mt-1 text-xs text-[#9CA3AF]">Start time is pre-selected from timetable</p>
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-[#6B7280]">
                 End <span className="text-rose-500">*</span>
               </label>
-              <input
+              <select
                 required
-                type="datetime-local"
                 value={endTime}
                 disabled={loading}
                 onChange={(e) => setEndTime(e.target.value)}
                 className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] disabled:opacity-75 transition-colors"
-              />
+              >
+                {endTimeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

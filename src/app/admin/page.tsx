@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
+import NotificationBell from "@/components/NotificationBell";
 
 type Tab = "overview" | "users" | "resources" | "categories" | "reservations";
 type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
@@ -380,6 +381,7 @@ export default function AdminDashboardPage() {
             >
               User Dashboard
             </Link>
+            <NotificationBell userId={currentAdmin?.id || ""} />
             <Link
               href="/profile"
               className="text-xs font-medium text-[#374151] hover:text-[#0052CC] transition-colors"

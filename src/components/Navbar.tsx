@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import NotificationBell from "@/components/NotificationBell";
 
 interface AuthUser {
   id: string;
@@ -81,6 +82,7 @@ export default function Navbar() {
               >
                 Profile
               </Link>
+              <NotificationBell userId={user.id} />
               <div className="h-6 w-px bg-[#E5E7EB] mx-2" />
               <span className="text-sm text-[#6B7280]">
                 {user.name}
@@ -172,6 +174,10 @@ export default function Navbar() {
                 >
                   Profile
                 </Link>
+                <div className="flex items-center gap-2 px-3 py-3">
+                  <NotificationBell userId={user.id} />
+                  <span className="text-sm text-[#6B7280]">{user.name}</span>
+                </div>
                 <div className="h-px bg-[#E5E7EB] my-2" />
                 <button
                   onClick={() => {
@@ -180,7 +186,7 @@ export default function Navbar() {
                   }}
                   className="px-3 py-3 text-left text-sm font-medium text-[#374151] hover:bg-[#F3F4F6] hover:text-[#0052CC] transition-colors rounded-md"
                 >
-                  Sign out ({user.name})
+                  Sign out
                 </button>
               </>
             ) : (
