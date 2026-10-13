@@ -192,6 +192,24 @@ export async function POST(request: NextRequest) {
           ? "Reservation confirmed. The resource is booked for your selected time."
           : "Reservation submitted and is pending admin approval.";
 
+      // Notify active admins about the new reservation
+      try {
+        const adminIds = await getActiveAdminUserIds();
+        if (adminIds.length > 0) {
+          const timeString = formatReservationTime(reservation.startTime, reservation.endTime);
+          const statusText = reservation.status === "CONFIRMED" ? "confirmed" : "pending approval";
+          await createBulkNotifications({
+            userIds: adminIds,
+            title: "New Reservation Created",
+            message: `${user.name} created a ${statusText} reservation for ${reservation.resource.name} on ${timeString}.`,
+            type: "RESERVATION_UPDATED",
+          });
+        }
+      } catch (notificationError) {
+        // Log notification error but don't fail the reservation creation
+        console.error("[Notification] Failed to create admin reservation notification:", notificationError);
+      }
+
       return Response.json({ message, reservation }, { status: 201 });
     } catch (err) {
       // P2034 = Transaction failed due to serialization conflict; retry
