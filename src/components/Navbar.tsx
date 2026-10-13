@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import NotificationBell from "@/components/NotificationBell";
 
 interface AuthUser {
   id: string;
@@ -75,6 +76,7 @@ export default function Navbar() {
               >
                 Dashboard
               </Link>
+              <NotificationBell userId={user.id} />
               <span className="text-xs text-slate-500">
                 Hi, <strong className="text-slate-800">{user.name}</strong>
               </span>

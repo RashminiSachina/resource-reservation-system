@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/Footer";
+import NotificationBell from "@/components/NotificationBell";
 
 // ---- Types ----
 type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
@@ -332,6 +333,7 @@ export default function UserDashboard() {
               <span className="text-sm font-medium text-slate-800">{user?.name}</span>
               <span className="text-xs text-slate-400">{user?.email}</span>
             </div>
+            {user && <NotificationBell userId={user.id} />}
             {user?.role === "ADMIN" && (
               <Link
                 href="/admin"

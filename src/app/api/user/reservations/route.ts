@@ -7,6 +7,7 @@ import {
   conflictError,
   findOccupiedOverlap,
 } from "@/lib/reservation-conflicts";
+import { createBulkNotifications, getActiveAdminUserIds, formatReservationTime } from "@/lib/notifications";
 
 /** Minimum booking lead time: 1 minute from now */
 const MIN_LEAD_MS = 60 * 1000;
@@ -191,6 +192,24 @@ export async function POST(request: NextRequest) {
           ? "Reservation confirmed. The resource is booked for your selected time."
           : "Reservation submitted and is pending admin approval.";
 
+      // Notify active admins about the new reservation
+      try {
+        const adminIds = await getActiveAdminUserIds();
+        if (adminIds.length > 0) {
+          const timeString = formatReservationTime(reservation.startTime, reservation.endTime);
+          const statusText = reservation.status === "CONFIRMED" ? "confirmed" : "pending approval";
+          await createBulkNotifications({
+            userIds: adminIds,
+            title: "New Reservation Created",
+            message: `${user.name} created a ${statusText} reservation for ${reservation.resource.name} on ${timeString}.`,
+            type: "RESERVATION_UPDATED",
+          });
+        }
+      } catch (notificationError) {
+        // Log notification error but don't fail the reservation creation
+        console.error("[Notification] Failed to create admin reservation notification:", notificationError);
+      }
+
       return Response.json({ message, reservation }, { status: 201 });
     } catch (err) {
       // P2034 = Transaction failed due to serialization conflict; retry
@@ -250,7 +269,14 @@ export async function PATCH(request: NextRequest) {
   // Ownership enforced — user can only cancel their own reservation
   const existing = await prisma.reservation.findFirst({
     where: { id: reservationId.trim(), userId: user.id },
-    select: { id: true, status: true },
+    select: {
+      id: true,
+      status: true,
+      requesterName: true,
+      startTime: true,
+      endTime: true,
+      resource: { select: { name: true } },
+    },
   });
 
   if (!existing) {
@@ -273,6 +299,23 @@ export async function PATCH(request: NextRequest) {
     data: { status: "CANCELLED" },
     select: { id: true, status: true },
   });
+
+  // Notify active admins about the user's cancellation
+  try {
+    const adminIds = await getActiveAdminUserIds();
+    if (adminIds.length > 0) {
+      const timeString = formatReservationTime(existing.startTime, existing.endTime);
+      await createBulkNotifications({
+        userIds: adminIds,
+        title: "Reservation Cancelled by User",
+        message: `${existing.requesterName} cancelled their reservation for ${existing.resource.name} on ${timeString}.`,
+        type: "RESERVATION_CANCELLED",
+      });
+    }
+  } catch (notificationError) {
+    // Log notification error but don't fail the cancellation
+    console.error("[Notification] Failed to create admin cancellation notification:", notificationError);
+  }
 
   return Response.json({ message: "Reservation cancelled.", reservation: updated }, { status: 200 });
 }
