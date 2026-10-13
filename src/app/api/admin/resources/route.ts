@@ -82,8 +82,36 @@ export async function POST(request: NextRequest) {
   if (typeof name !== "string" || !name.trim()) {
     return Response.json({ error: "Resource name is required." }, { status: 400 });
   }
+  if (name.trim().length > 100) {
+    return Response.json({ error: "Resource name cannot exceed 100 characters." }, { status: 400 });
+  }
+
   if (typeof categoryId !== "string" || !categoryId.trim()) {
     return Response.json({ error: "Category is required." }, { status: 400 });
+  }
+
+  if (typeof location !== "string" || !location.trim()) {
+    return Response.json({ error: "Location is required." }, { status: 400 });
+  }
+  if (location.trim().length > 150) {
+    return Response.json({ error: "Location cannot exceed 150 characters." }, { status: 400 });
+  }
+
+  if (
+    capacity === undefined ||
+    capacity === null ||
+    typeof capacity !== "number" ||
+    !Number.isInteger(capacity) ||
+    capacity <= 0
+  ) {
+    return Response.json({ error: "Capacity is required and must be a positive integer." }, { status: 400 });
+  }
+
+  if (description !== undefined && description !== null && typeof description !== "string") {
+    return Response.json({ error: "Description must be valid text." }, { status: 400 });
+  }
+  if (typeof description === "string" && description.trim().length > 1000) {
+    return Response.json({ error: "Description cannot exceed 1000 characters." }, { status: 400 });
   }
 
   const category = await prisma.resourceCategory.findUnique({
@@ -94,27 +122,48 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Category not found." }, { status: 404 });
   }
 
-  const resource = await prisma.resource.create({
-    data: {
-      name: name.trim(),
-      description: typeof description === "string" ? description.trim() || null : null,
-      location: typeof location === "string" ? location.trim() || null : null,
-      capacity: typeof capacity === "number" && capacity > 0 ? Math.floor(capacity) : null,
-      categoryId: category.id,
-      isActive: true,
+  // Check for duplicate resource with same name and location
+  const duplicate = await prisma.resource.findFirst({
+    where: {
+      name: { equals: name.trim(), mode: "insensitive" },
+      location: { equals: location.trim(), mode: "insensitive" },
     },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      location: true,
-      capacity: true,
-      isActive: true,
-      category: { select: { id: true, name: true } },
-    },
+    select: { id: true },
   });
+  if (duplicate) {
+    return Response.json(
+      { error: "A resource with this name and location already exists." },
+      { status: 409 }
+    );
+  }
 
-  return Response.json({ message: "Resource created.", resource }, { status: 201 });
+  try {
+    const resource = await prisma.resource.create({
+      data: {
+        name: name.trim(),
+        description: typeof description === "string" ? description.trim() || null : null,
+        location: location.trim(),
+        capacity: Math.floor(capacity),
+        categoryId: category.id,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        location: true,
+        capacity: true,
+        isActive: true,
+        createdAt: true,
+        category: { select: { id: true, name: true } },
+        _count: { select: { reservations: true } },
+      },
+    });
+
+    return Response.json({ message: "Resource created successfully.", resource }, { status: 201 });
+  } catch {
+    return Response.json({ error: "Failed to create resource. Please try again." }, { status: 500 });
+  }
 }
 
 export async function PATCH(request: NextRequest) {
