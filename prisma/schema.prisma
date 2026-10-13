@@ -24,6 +24,7 @@ enum NotificationType {
   RESERVATION_CANCELLED
   RESERVATION_REMINDER
   SYSTEM
+  NEW_RESOURCE
 }
 
 model User {

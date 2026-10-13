@@ -79,9 +79,9 @@ interface AdminCategory {
 }
 
 const STATUS_STYLES: Record<ReservationStatus, string> = {
-  PENDING: "bg-amber-100 text-amber-800",
-  CONFIRMED: "bg-emerald-100 text-emerald-800",
-  CANCELLED: "bg-red-100 text-red-700",
+  PENDING: "bg-amber-50 text-amber-800 border-amber-200",
+  CONFIRMED: "bg-[#84CC16]/10 text-[#6DB30F] border-[#84CC16]/30",
+  CANCELLED: "bg-rose-50 text-rose-800 border-rose-200",
 };
 
 export default function AdminDashboardPage() {
@@ -360,16 +360,16 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex min-h-screen flex-col bg-[#FAFAF9]">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 w-full border-b border-[#E5E7EB] bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2 text-xl font-bold text-indigo-600">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white text-sm font-bold">R</span>
+            <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-[#1A1A1A]">
+              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-[#0052CC] text-white text-sm font-bold">R</span>
               ReserveIt
             </Link>
-            <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
+            <span className="rounded-md bg-[#F3F4F6] px-2 py-0.5 text-xs font-medium text-[#1A1A1A] border border-[#E5E7EB]">
               Admin Console
             </span>
           </div>
@@ -377,17 +377,23 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-4">
             <Link
               href="/dashboard"
-              className="text-xs font-medium text-slate-600 hover:text-indigo-600 transition"
+              className="text-xs font-medium text-[#374151] hover:text-[#0052CC] transition-colors"
             >
               User Dashboard
             </Link>
             {currentAdmin && <NotificationBell userId={currentAdmin.id} />}
-            <span className="text-sm text-slate-700 font-medium hidden sm:inline">{currentAdmin?.name}</span>
+            <Link
+              href="/profile"
+              className="text-xs font-medium text-[#374151] hover:text-[#0052CC] transition-colors"
+            >
+              Profile
+            </Link>
+            <span className="text-sm text-[#1A1A1A] font-medium hidden sm:inline">{currentAdmin?.name}</span>
             <button
               onClick={() => void handleLogout()}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition"
+              className="text-xs font-medium text-[#374151] hover:text-[#0052CC] transition-colors"
             >
-              Log out
+              Sign out
             </button>
           </div>
         </div>
@@ -397,23 +403,23 @@ export default function AdminDashboardPage() {
       <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
         {/* Error Banner */}
         {errorBanner && (
-          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <div className="mb-6 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
             {errorBanner}
           </div>
         )}
 
         {/* Success Banner */}
         {successBanner && (
-          <div className="mb-6 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-sm">
+          <div className="mb-6 flex items-center justify-between rounded-md border border-[#84CC16]/30 bg-[#84CC16]/10 px-4 py-3 text-sm text-[#6DB30F]">
             <div className="flex items-center gap-2">
-              <svg className="h-5 w-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg className="h-5 w-5 text-[#84CC16] shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="font-medium">{successBanner}</span>
             </div>
             <button
               onClick={() => setSuccessBanner(null)}
-              className="text-emerald-600 hover:text-emerald-800 text-xs font-semibold"
+              className="text-[#6DB30F] hover:text-[#84CC16] text-xs font-medium transition-colors"
             >
               ✕
             </button>
@@ -421,38 +427,40 @@ export default function AdminDashboardPage() {
         )}
 
         {/* Dashboard Title & Tabs Header */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Administration Dashboard</h1>
-            <p className="mt-0.5 text-sm text-slate-500">
-              Manage system users, resources, categories, and reservation statuses.
-            </p>
+        <div className="mb-8 rounded-xl bg-gradient-to-r from-[#0052CC] via-[#0047B3] to-[#003399] p-8 text-white shadow-lg">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Administration Dashboard</h1>
+              <p className="mt-1 text-white/90">
+                Manage system users, resources, categories, and reservation statuses.
+              </p>
+            </div>
           </div>
+        </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex rounded-xl bg-slate-200/80 p-1 text-sm font-medium">
-            {(
-              [
-                { id: "overview", label: "Overview" },
-                { id: "users", label: "Users" },
-                { id: "resources", label: "Resources" },
-                { id: "categories", label: "Categories" },
-                { id: "reservations", label: "Reservations" },
-              ] as const
-            ).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                className={`rounded-lg px-4 py-1.5 transition ${
-                  activeTab === t.id
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+        {/* Navigation Tabs */}
+        <div className="mb-6 flex border-b border-[#E5E7EB] text-sm font-medium bg-white rounded-t-lg px-4">
+          {(
+            [
+              { id: "overview", label: "Overview" },
+              { id: "users", label: "Users" },
+              { id: "resources", label: "Resources" },
+              { id: "categories", label: "Categories" },
+              { id: "reservations", label: "Reservations" },
+            ] as const
+          ).map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as Tab)}
+              className={`px-4 py-3 transition-colors border-b-2 -mb-px ${
+                activeTab === t.id
+                  ? "border-[#0052CC] text-[#0052CC]"
+                  : "border-transparent text-[#6B7280] hover:text-[#1A1A1A]"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
 
         {/* TAB 1: OVERVIEW */}
@@ -460,63 +468,66 @@ export default function AdminDashboardPage() {
           <div className="space-y-8">
             {overviewLoading ? (
               <div className="flex h-48 items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0052CC] border-t-transparent" />
               </div>
             ) : stats ? (
               <>
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
                   {[
-                    { label: "Total Users", val: stats.totalUsers, bg: "bg-blue-50", text: "text-blue-700" },
-                    { label: "Active Resources", val: stats.totalResources, bg: "bg-indigo-50", text: "text-indigo-700" },
-                    { label: "Total Bookings", val: stats.totalReservations, bg: "bg-slate-100", text: "text-slate-800" },
-                    { label: "Pending", val: stats.pendingReservations, bg: "bg-amber-50", text: "text-amber-700" },
-                    { label: "Approved", val: stats.confirmedReservations, bg: "bg-emerald-50", text: "text-emerald-700" },
-                    { label: "Cancelled", val: stats.cancelledReservations, bg: "bg-red-50", text: "text-red-700" },
-                  ].map((c) => (
-                    <div key={c.label} className={`rounded-2xl border border-slate-200 ${c.bg} p-5`}>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{c.label}</p>
-                      <p className={`mt-2 text-3xl font-extrabold ${c.text}`}>{c.val}</p>
+                    { label: "Total Users", val: stats.totalUsers, gradient: "from-blue-500/10 to-blue-600/10", border: "border-blue-200", text: "text-blue-700", icon: "👥" },
+                    { label: "Active Resources", val: stats.totalResources, gradient: "from-cyan-500/10 to-cyan-600/10", border: "border-cyan-200", text: "text-cyan-700", icon: "📦" },
+                    { label: "Total Bookings", val: stats.totalReservations, gradient: "from-violet-500/10 to-violet-600/10", border: "border-violet-200", text: "text-violet-700", icon: "📅" },
+                    { label: "Pending", val: stats.pendingReservations, gradient: "from-amber-500/10 to-amber-600/10", border: "border-amber-200", text: "text-amber-700", icon: "⏳" },
+                    { label: "Approved", val: stats.confirmedReservations, gradient: "from-emerald-500/10 to-emerald-600/10", border: "border-emerald-200", text: "text-emerald-700", icon: "✓" },
+                    { label: "Cancelled", val: stats.cancelledReservations, gradient: "from-rose-500/10 to-rose-600/10", border: "border-rose-200", text: "text-rose-700", icon: "✕" },
+                  ].map((c, index) => (
+                    <div key={c.label} className={`rounded-lg border ${c.border} bg-gradient-to-br ${c.gradient} p-5 transition-all hover:shadow-md`}>
+                      <p className="text-xs font-medium uppercase tracking-wider text-[#6B7280] flex items-center gap-1.5">
+                        <span className="text-lg">{c.icon}</span>
+                        {c.label}
+                      </p>
+                      <p className={`mt-2 text-3xl font-bold ${c.text}`}>{c.val}</p>
                     </div>
                   ))}
                 </div>
 
                 {/* Recent Activity Table */}
-                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                  <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-                    <h2 className="text-base font-semibold text-slate-900">Recent Reservation Activity</h2>
+                <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden shadow-sm">
+                  <div className="flex items-center justify-between border-b border-[#E5E7EB] px-6 py-4 bg-gradient-to-r from-[#F8FAFC] to-white">
+                    <h2 className="text-base font-semibold text-[#1A1A1A]">Recent Reservation Activity</h2>
                     <button
                       onClick={() => setActiveTab("reservations")}
-                      className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+                      className="text-xs font-medium text-[#0052CC] hover:text-[#0047B3] transition-colors"
                     >
                       View all reservations →
                     </button>
                   </div>
 
                   {recentActivity.length === 0 ? (
-                    <div className="py-12 text-center text-sm text-slate-400">No reservations recorded yet.</div>
+                    <div className="py-12 text-center text-sm text-[#9CA3AF]">No reservations recorded yet.</div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-slate-100 text-sm">
-                        <thead className="bg-slate-50">
+                      <table className="min-w-full divide-y divide-[#E5E7EB] text-sm">
+                        <thead className="bg-gradient-to-r from-[#F3F4F6] to-[#F8FAFC]">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Resource</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">User</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Time</th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Resource</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">User</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Time</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {recentActivity.map((r) => (
-                            <tr key={r.id} className="hover:bg-slate-50">
-                              <td className="px-6 py-3.5 font-medium text-slate-900">
+                        <tbody className="divide-y divide-[#E5E7EB]">
+                          {recentActivity.map((r, index) => (
+                            <tr key={r.id} className={`hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-[#FAFAF9]'}`}>
+                              <td className="px-6 py-3.5 font-medium text-[#1A1A1A]">
                                 {r.resource.name}
-                                {r.resource.location && <span className="ml-1 text-xs text-slate-400">({r.resource.location})</span>}
+                                {r.resource.location && <span className="ml-1 text-xs text-[#9CA3AF]">({r.resource.location})</span>}
                               </td>
-                              <td className="px-6 py-3.5 text-slate-600">
-                                {r.user.name} <span className="text-xs text-slate-400">&lt;{r.user.email}&gt;</span>
+                              <td className="px-6 py-3.5 text-[#6B7280]">
+                                {r.user.name} <span className="text-xs text-[#9CA3AF]">&lt;{r.user.email}&gt;</span>
                               </td>
-                              <td className="px-6 py-3.5 text-slate-500 whitespace-nowrap">
+                              <td className="px-6 py-3.5 text-[#6B7280] whitespace-nowrap">
                                 {new Date(r.startTime).toLocaleDateString()}
                               </td>
                               <td className="px-6 py-3.5">
@@ -540,19 +551,19 @@ export default function AdminDashboardPage() {
         {activeTab === "users" && (
           <div className="space-y-4">
             {/* Filter toolbar */}
-            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 rounded-xl border border-[#E5E7EB] bg-gradient-to-r from-white to-[#F8FAFC] p-4 shadow-sm sm:flex-row sm:items-center">
               <input
                 type="text"
                 placeholder="Search name or email…"
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && void loadUsers()}
-                className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                className="flex-1 rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
               />
               <select
                 value={userRoleFilter}
                 onChange={(e) => setUserRoleFilter(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none"
+                className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
               >
                 <option value="">All Roles</option>
                 <option value="USER">USER</option>
@@ -561,7 +572,7 @@ export default function AdminDashboardPage() {
               <select
                 value={userStatusFilter}
                 onChange={(e) => setUserStatusFilter(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none"
+                className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
               >
                 <option value="">All Statuses</option>
                 <option value="active">Active</option>
@@ -569,73 +580,73 @@ export default function AdminDashboardPage() {
               </select>
               <button
                 onClick={() => void loadUsers()}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition"
+                className="rounded-md bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0047B3] transition-colors"
               >
                 Filter
               </button>
             </div>
 
             {/* Users Table */}
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden shadow-sm">
               {usersLoading ? (
                 <div className="flex h-36 items-center justify-center">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#0052CC] border-t-transparent" />
                 </div>
               ) : users.length === 0 ? (
-                <div className="py-12 text-center text-sm text-slate-400">No users found matching criteria.</div>
+                <div className="py-12 text-center text-sm text-[#9CA3AF]">No users found matching criteria.</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-100 text-sm">
-                    <thead className="bg-slate-50">
+                  <table className="min-w-full divide-y divide-[#E5E7EB] text-sm">
+                    <thead className="bg-gradient-to-r from-[#F3F4F6] to-[#F8FAFC]">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">User</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Role</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Account Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Reservations</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Joined</th>
-                        <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">User</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Role</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Account Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Reservations</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Joined</th>
+                        <th className="px-6 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {users.map((u) => {
+                    <tbody className="divide-y divide-[#E5E7EB]">
+                      {users.map((u, index) => {
                         const isSelf = u.id === currentAdmin?.id;
                         return (
-                          <tr key={u.id} className="hover:bg-slate-50">
+                          <tr key={u.id} className={`hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-[#FAFAF9]'}`}>
                             <td className="px-6 py-3.5">
-                              <p className="font-semibold text-slate-900">{u.name}</p>
-                              <p className="text-xs text-slate-500">{u.email}</p>
+                              <p className="font-medium text-[#1A1A1A]">{u.name}</p>
+                              <p className="text-xs text-[#6B7280]">{u.email}</p>
                             </td>
                             <td className="px-6 py-3.5">
-                              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${
-                                u.role === "ADMIN" ? "bg-purple-50 text-purple-700 ring-1 ring-purple-600/20" : "bg-slate-100 text-slate-700"
+                              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
+                                u.role === "ADMIN" ? "bg-gradient-to-r from-violet-100 to-purple-100 text-violet-800 border border-violet-200" : "bg-gradient-to-r from-blue-100 to-cyan-100 text-blue-800 border border-blue-200"
                               }`}>
                                 {u.role}
                               </span>
                             </td>
                             <td className="px-6 py-3.5">
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                u.isActive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                                u.isActive ? "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200" : "bg-gradient-to-r from-rose-100 to-pink-100 text-rose-800 border border-rose-200"
                               }`}>
                                 {u.isActive ? "Active" : "Deactivated"}
                               </span>
                             </td>
-                            <td className="px-6 py-3.5 text-slate-600 font-medium">
+                            <td className="px-6 py-3.5 text-[#6B7280] font-medium">
                               {u._count.reservations}
                             </td>
-                            <td className="px-6 py-3.5 text-slate-400 text-xs">
+                            <td className="px-6 py-3.5 text-[#9CA3AF] text-xs">
                               {new Date(u.createdAt).toLocaleDateString()}
                             </td>
                             <td className="px-6 py-3.5 text-right">
                               {isSelf ? (
-                                <span className="text-xs text-slate-400 italic">Current User</span>
+                                <span className="text-xs text-[#9CA3AF] italic">Current User</span>
                               ) : (
                                 <button
                                   onClick={() => void toggleUserStatus(u)}
                                   disabled={userActionId === u.id}
-                                  className={`rounded-lg px-3 py-1 text-xs font-semibold transition ${
+                                  className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
                                     u.isActive
-                                      ? "bg-red-50 text-red-700 hover:bg-red-100"
-                                      : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                      ? "bg-rose-50 text-rose-800 hover:bg-rose-100"
+                                      : "bg-[#84CC16]/10 text-[#6DB30F] hover:bg-[#84CC16]/20"
                                   } disabled:opacity-50`}
                                 >
                                   {userActionId === u.id
@@ -661,19 +672,19 @@ export default function AdminDashboardPage() {
         {activeTab === "resources" && (
           <div className="space-y-4">
             {/* Resource Toolbar */}
-            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 rounded-xl border border-[#E5E7EB] bg-gradient-to-r from-white to-[#F8FAFC] p-4 shadow-sm sm:flex-row sm:items-center">
               <input
                 type="text"
                 placeholder="Search resources…"
                 value={resourceSearch}
                 onChange={(e) => setResourceSearch(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && void loadResources()}
-                className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                className="flex-1 rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
               />
               <select
                 value={resourceCatFilter}
                 onChange={(e) => setResourceCatFilter(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none"
+                className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
               >
                 <option value="">All Categories</option>
                 {categories.map((c) => (
@@ -682,7 +693,7 @@ export default function AdminDashboardPage() {
               </select>
               <button
                 onClick={() => void loadResources()}
-                className="rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition"
+                className="rounded-md bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0047B3] transition-colors"
               >
                 Filter
               </button>
@@ -691,69 +702,66 @@ export default function AdminDashboardPage() {
                   setEditingResource(null);
                   setResourceModalOpen(true);
                 }}
-                className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
+                className="rounded-md bg-gradient-to-r from-[#84CC16] to-[#6DB30F] px-4 py-2 text-sm font-medium text-white hover:from-[#6DB30F] hover:to-[#5FA30E] transition-all shadow-sm"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                Create Resource
+                + Add Resource
               </button>
             </div>
 
             {/* Resources Table */}
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden shadow-sm">
               {resourcesLoading ? (
                 <div className="flex h-36 items-center justify-center">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#0052CC] border-t-transparent" />
                 </div>
               ) : resources.length === 0 ? (
-                <div className="py-12 text-center text-sm text-slate-400">No resources found.</div>
+                <div className="py-12 text-center text-sm text-[#9CA3AF]">No resources found.</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-100 text-sm">
-                    <thead className="bg-slate-50">
+                  <table className="min-w-full divide-y divide-[#E5E7EB] text-sm">
+                    <thead className="bg-gradient-to-r from-[#F3F4F6] to-[#F8FAFC]">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Resource</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Category</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Location & Capacity</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Approval</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Bookings</th>
-                        <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Actions</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Resource</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Category</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Location & Capacity</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Approval</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Bookings</th>
+                        <th className="px-6 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {resources.map((r) => (
-                        <tr key={r.id} className="hover:bg-slate-50">
+                    <tbody className="divide-y divide-[#E5E7EB]">
+                      {resources.map((r, index) => (
+                        <tr key={r.id} className={`hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-[#FAFAF9]'}`}>
                           <td className="px-6 py-3.5">
-                            <p className="font-semibold text-slate-900">{r.name}</p>
-                            {r.description && <p className="max-w-xs truncate text-xs text-slate-500">{r.description}</p>}
+                            <p className="font-medium text-[#1A1A1A]">{r.name}</p>
+                            {r.description && <p className="max-w-xs truncate text-xs text-[#6B7280]">{r.description}</p>}
                           </td>
                           <td className="px-6 py-3.5">
-                            <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                            <span className="rounded-md bg-gradient-to-r from-cyan-100 to-teal-100 px-2 py-0.5 text-xs font-semibold text-cyan-800 border border-cyan-200">
                               {r.category.name}
                             </span>
                           </td>
-                          <td className="px-6 py-3.5 text-slate-600 text-xs">
+                          <td className="px-6 py-3.5 text-[#6B7280] text-xs">
                             {r.location ?? "—"} {r.capacity ? `· Capacity: ${r.capacity}` : ""}
                           </td>
                           <td className="px-6 py-3.5">
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              r.isActive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                              r.isActive ? "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200" : "bg-gradient-to-r from-rose-100 to-pink-100 text-rose-800 border border-rose-200"
                             }`}>
                               {r.isActive ? "Active" : "Inactive"}
                             </span>
                           </td>
                           <td className="px-6 py-3.5">
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                               r.requiresApproval !== false
-                                ? "bg-amber-50 text-amber-800"
-                                : "bg-sky-50 text-sky-800"
+                                ? "bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 border border-amber-200"
+                                : "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200"
                             }`}>
                               {r.requiresApproval !== false ? "Admin approval" : "Instant confirm"}
                             </span>
                           </td>
-                          <td className="px-6 py-3.5 text-slate-600 font-medium">
+                          <td className="px-6 py-3.5 text-[#6B7280] font-medium">
                             {r._count.reservations}
                           </td>
                           <td className="px-6 py-3.5 text-right space-x-2">
@@ -762,16 +770,16 @@ export default function AdminDashboardPage() {
                                 setEditingResource(r);
                                 setResourceModalOpen(true);
                               }}
-                              className="rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100 transition"
+                              className="rounded-md border border-[#E5E7EB] px-2.5 py-1 text-xs font-medium text-[#1A1A1A] hover:bg-[#F3F4F6] transition-colors"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => void toggleResourceActive(r)}
-                              className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
+                              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                                 r.isActive
-                                  ? "bg-red-50 text-red-700 hover:bg-red-100"
-                                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                  ? "bg-rose-50 text-rose-800 hover:bg-rose-100"
+                                  : "bg-[#84CC16]/10 text-[#6DB30F] hover:bg-[#84CC16]/20"
                               }`}
                             >
                               {r.isActive ? "Deactivate" : "Activate"}
@@ -790,18 +798,18 @@ export default function AdminDashboardPage() {
         {/* TAB 4: CATEGORIES */}
         {activeTab === "categories" && (
           <div className="space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">Resource Categories</h2>
-                <p className="text-xs text-slate-500">
+                <h2 className="text-lg font-semibold text-[#1A1A1A]">Resource Categories</h2>
+                <p className="text-xs text-[#6B7280]">
                   Manage categorization for bookable rooms, equipment, and facilities.
                 </p>
               </div>
               <button
                 onClick={() => setCategoryModalOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
+                className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-[#84CC16] to-[#6DB30F] px-3.5 py-2 text-xs font-medium text-white hover:from-[#6DB30F] hover:to-[#5FA30E] transition-all shadow-sm"
               >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
                 Create Category
@@ -811,51 +819,51 @@ export default function AdminDashboardPage() {
             {/* Table or Loading */}
             {categoriesLoading ? (
               <div className="flex h-48 items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0052CC] border-t-transparent" />
               </div>
             ) : adminCategories.length === 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-white py-16 text-center shadow-sm">
-                <svg className="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <div className="rounded-xl border border-[#E5E7EB] bg-gradient-to-br from-white to-[#F8FAFC] py-16 text-center shadow-sm">
+                <svg className="mx-auto h-12 w-12 text-[#E5E7EB]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
                 </svg>
-                <p className="mt-3 text-sm font-medium text-slate-700">No categories found</p>
-                <p className="mt-1 text-xs text-slate-500">Create your first category to start organizing resources.</p>
+                <p className="mt-3 text-sm font-medium text-[#1A1A1A]">No categories found</p>
+                <p className="mt-1 text-xs text-[#6B7280]">Create your first category to start organizing resources.</p>
                 <button
                   onClick={() => setCategoryModalOpen(true)}
-                  className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
+                  className="mt-4 rounded-md bg-gradient-to-r from-[#84CC16] to-[#6DB30F] px-4 py-2 text-xs font-medium text-white hover:from-[#6DB30F] hover:to-[#5FA30E] transition-all shadow-sm"
                 >
                   + Create Category
                 </button>
               </div>
             ) : (
-              <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-100 text-sm">
-                    <thead className="bg-slate-50">
+                  <table className="min-w-full divide-y divide-[#E5E7EB] text-sm">
+                    <thead className="bg-gradient-to-r from-[#F3F4F6] to-[#F8FAFC]">
                       <tr>
                         {["Category Name", "Description", "Associated Resources", "Created Date"].map((h) => (
-                          <th key={h} className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                          <th key={h} className="px-6 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-[#6B7280]">
                             {h}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {adminCategories.map((c) => (
-                        <tr key={c.id} className="hover:bg-slate-50/80 transition">
+                    <tbody className="divide-y divide-[#E5E7EB]">
+                      {adminCategories.map((c, index) => (
+                        <tr key={c.id} className={`hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-[#FAFAF9]'}`}>
                           <td className="whitespace-nowrap px-6 py-4">
-                            <span className="font-semibold text-slate-900">{c.name}</span>
+                            <span className="font-medium text-[#1A1A1A]">{c.name}</span>
                           </td>
-                          <td className="max-w-xs truncate px-6 py-4 text-slate-600">
-                            {c.description ? c.description : <span className="text-slate-400 italic">No description</span>}
+                          <td className="max-w-xs truncate px-6 py-4 text-[#6B7280]">
+                            {c.description ? c.description : <span className="text-[#9CA3AF] italic">No description</span>}
                           </td>
                           <td className="whitespace-nowrap px-6 py-4">
-                            <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-semibold text-indigo-700">
+                            <span className="inline-flex items-center rounded-full bg-gradient-to-r from-violet-100 to-purple-100 px-2.5 py-0.5 text-xs font-semibold text-violet-800 border border-violet-200">
                               {c._count.resources} {c._count.resources === 1 ? "resource" : "resources"}
                             </span>
                           </td>
-                          <td className="whitespace-nowrap px-6 py-4 text-xs text-slate-500">
+                          <td className="whitespace-nowrap px-6 py-4 text-xs text-[#9CA3AF]">
                             {new Date(c.createdAt).toLocaleDateString(undefined, {
                               month: "short",
                               day: "numeric",
@@ -876,19 +884,19 @@ export default function AdminDashboardPage() {
         {activeTab === "reservations" && (
           <div className="space-y-4">
             {/* Filter toolbar */}
-            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 rounded-xl border border-[#E5E7EB] bg-gradient-to-r from-white to-[#F8FAFC] p-4 shadow-sm sm:flex-row sm:items-center">
               <input
                 type="text"
                 placeholder="Search requester or purpose…"
                 value={reservationSearch}
                 onChange={(e) => setReservationSearch(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && void loadReservations()}
-                className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                className="flex-1 rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
               />
               <select
                 value={reservationStatusFilter}
                 onChange={(e) => setReservationStatusFilter(e.target.value)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none"
+                className="rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] transition-colors"
               >
                 <option value="">All Statuses</option>
                 <option value="PENDING">PENDING</option>
@@ -897,50 +905,50 @@ export default function AdminDashboardPage() {
               </select>
               <button
                 onClick={() => void loadReservations()}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition"
+                className="rounded-md bg-[#0052CC] px-4 py-2 text-sm font-medium text-white hover:bg-[#0047B3] transition-colors"
               >
                 Filter
               </button>
             </div>
 
             {/* Reservations Table */}
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden shadow-sm">
               {reservationsLoading ? (
                 <div className="flex h-36 items-center justify-center">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#0052CC] border-t-transparent" />
                 </div>
               ) : reservations.length === 0 ? (
-                <div className="py-12 text-center text-sm text-slate-400">No reservations found matching filter.</div>
+                <div className="py-12 text-center text-sm text-[#9CA3AF]">No reservations found matching filter.</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-slate-100 text-sm">
-                    <thead className="bg-slate-50">
+                  <table className="min-w-full divide-y divide-[#E5E7EB] text-sm">
+                    <thead className="bg-gradient-to-r from-[#F3F4F6] to-[#F8FAFC]">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Resource</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Requester</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Purpose</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Dates</th>
-                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
-                        <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Manage Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Resource</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Requester</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Purpose</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Dates</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-right text-xs font-semibold text-[#6B7280] uppercase tracking-wider">Manage Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {reservations.map((r) => (
-                        <tr key={r.id} className="hover:bg-slate-50">
-                          <td className="px-6 py-3.5 font-medium text-slate-900">
+                    <tbody className="divide-y divide-[#E5E7EB]">
+                      {reservations.map((r, index) => (
+                        <tr key={r.id} className={`hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-[#FAFAF9]'}`}>
+                          <td className="px-6 py-3.5 font-medium text-[#1A1A1A]">
                             {r.resource.name}
-                            {r.resource.location && <span className="ml-1 text-xs text-slate-400">· {r.resource.location}</span>}
+                            {r.resource.location && <span className="ml-1 text-xs text-[#9CA3AF]">· {r.resource.location}</span>}
                           </td>
                           <td className="px-6 py-3.5">
-                            <p className="font-semibold text-slate-900">{r.requesterName}</p>
-                            <p className="text-xs text-slate-500">{r.requesterEmail}</p>
+                            <p className="font-medium text-[#1A1A1A]">{r.requesterName}</p>
+                            <p className="text-xs text-[#6B7280]">{r.requesterEmail}</p>
                           </td>
-                          <td className="px-6 py-3.5 max-w-xs truncate text-slate-600">
+                          <td className="px-6 py-3.5 max-w-xs truncate text-[#6B7280]">
                             {r.purpose}
                           </td>
-                          <td className="px-6 py-3.5 whitespace-nowrap text-xs text-slate-500">
+                          <td className="px-6 py-3.5 whitespace-nowrap text-xs text-[#6B7280]">
                             <p>{new Date(r.startTime).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
-                            <p className="text-slate-400">to {new Date(r.endTime).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                            <p className="text-[#9CA3AF]">to {new Date(r.endTime).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                           </td>
                           <td className="px-6 py-3.5">
                             <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLES[r.status]}`}>
@@ -953,14 +961,14 @@ export default function AdminDashboardPage() {
                                 <button
                                   onClick={() => void handleReservationStatusUpdate(r.id, "CONFIRMED")}
                                   disabled={reservationActionId === r.id}
-                                  className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 transition"
+                                  className="rounded-md bg-gradient-to-r from-emerald-100 to-green-100 px-2.5 py-1 text-xs font-semibold text-emerald-800 hover:from-emerald-200 hover:to-green-200 disabled:opacity-50 transition-all"
                                 >
                                   Approve
                                 </button>
                                 <button
                                   onClick={() => void handleReservationStatusUpdate(r.id, "CANCELLED")}
                                   disabled={reservationActionId === r.id}
-                                  className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50 transition"
+                                  className="rounded-md bg-gradient-to-r from-rose-100 to-pink-100 px-2.5 py-1 text-xs font-semibold text-rose-800 hover:from-rose-200 hover:to-pink-200 disabled:opacity-50 transition-all"
                                 >
                                   Reject
                                 </button>
@@ -970,7 +978,7 @@ export default function AdminDashboardPage() {
                               <button
                                 onClick={() => void handleReservationStatusUpdate(r.id, "CANCELLED")}
                                 disabled={reservationActionId === r.id}
-                                className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50 transition"
+                                className="rounded-md bg-gradient-to-r from-amber-100 to-orange-100 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:from-amber-200 hover:to-orange-200 disabled:opacity-50 transition-all"
                               >
                                 Cancel
                               </button>
@@ -979,7 +987,7 @@ export default function AdminDashboardPage() {
                               <button
                                 onClick={() => void handleReservationStatusUpdate(r.id, "CONFIRMED")}
                                 disabled={reservationActionId === r.id}
-                                className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:opacity-50 transition"
+                                className="rounded-md bg-gradient-to-r from-blue-100 to-cyan-100 px-2.5 py-1 text-xs font-semibold text-blue-800 hover:from-blue-200 hover:to-cyan-200 disabled:opacity-50 transition-all"
                               >
                                 Re-approve
                               </button>
@@ -1139,8 +1147,8 @@ function ResourceModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-2xl border border-indigo-100 bg-white p-6 shadow-xl shadow-indigo-200/50">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
@@ -1155,7 +1163,7 @@ function ResourceModal({
           <button
             onClick={onClose}
             disabled={loading}
-            className="text-slate-400 hover:text-slate-600 disabled:opacity-50"
+            className="text-slate-400 hover:text-slate-600 disabled:opacity-50 transition-colors"
             aria-label="Close modal"
           >
             ✕
@@ -1163,8 +1171,8 @@ function ResourceModal({
         </div>
 
         {err && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 border border-red-200">
-            <svg className="h-4 w-4 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-700 border border-rose-200 shadow-sm">
+            <svg className="h-4 w-4 shrink-0 text-rose-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 8.25h.008v.008H12v-.008z" />
             </svg>
             <span>{err}</span>

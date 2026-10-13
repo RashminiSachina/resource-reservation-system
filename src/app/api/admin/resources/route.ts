@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
           userIds: regularUserIds,
           title: "New Resource Available",
           message: `A new resource, ${resource.name}${locationText}, has been added and is available for booking.`,
-          type: "SYSTEM",
+          type: "NEW_RESOURCE",
         });
       }
     } catch (notificationError) {
