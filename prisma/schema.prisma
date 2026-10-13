@@ -71,13 +71,14 @@ model ResourceCategory {
 }
 
 model Resource {
-  id           String           @id @default(cuid())
-  name         String
-  description  String?
-  location     String?
-  capacity     Int?
-  isActive     Boolean          @default(true)
-  categoryId   String
+  id               String           @id @default(cuid())
+  name             String
+  description      String?
+  location         String?
+  capacity         Int?
+  isActive         Boolean          @default(true)
+  requiresApproval Boolean          @default(true)
+  categoryId       String
   category     ResourceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   reservations Reservation[]
   createdAt    DateTime         @default(now()) @db.Timestamptz(3)

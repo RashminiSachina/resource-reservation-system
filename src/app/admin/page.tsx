@@ -45,6 +45,7 @@ interface AdminResource {
   location: string | null;
   capacity: number | null;
   isActive: boolean;
+  requiresApproval: boolean;
   createdAt: string;
   category: { id: string; name: string };
   _count: { reservations: number };
@@ -337,6 +338,14 @@ export default function AdminDashboardPage() {
         alert(data.error ?? "Failed to update reservation status.");
         return;
       }
+      setSuccessBanner(
+        data.message ??
+          (newStatus === "CONFIRMED"
+            ? "Reservation approved."
+            : newStatus === "CANCELLED"
+            ? "Reservation updated."
+            : "Reservation updated.")
+      );
       void loadReservations();
       if (activeTab === "overview") void loadOverview();
     } finally {
@@ -706,6 +715,7 @@ export default function AdminDashboardPage() {
                         <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Category</th>
                         <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Location & Capacity</th>
                         <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Approval</th>
                         <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Bookings</th>
                         <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Actions</th>
                       </tr>
@@ -730,6 +740,15 @@ export default function AdminDashboardPage() {
                               r.isActive ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
                             }`}>
                               {r.isActive ? "Active" : "Inactive"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3.5">
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                              r.requiresApproval !== false
+                                ? "bg-amber-50 text-amber-800"
+                                : "bg-sky-50 text-sky-800"
+                            }`}>
+                              {r.requiresApproval !== false ? "Admin approval" : "Instant confirm"}
                             </span>
                           </td>
                           <td className="px-6 py-3.5 text-slate-600 font-medium">
@@ -1030,6 +1049,9 @@ function ResourceModal({
   const [categoryId, setCategoryId] = useState(
     resource?.category.id ?? (categories[0]?.id ?? "")
   );
+  const [requiresApproval, setRequiresApproval] = useState(
+    resource?.requiresApproval !== false
+  );
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -1084,6 +1106,7 @@ function ResourceModal({
       location: trimmedLocation,
       capacity: parsedCapacity,
       categoryId: trimmedCategoryId,
+      requiresApproval,
     };
 
     try {
@@ -1232,6 +1255,27 @@ function ResourceModal({
               placeholder="Details about equipment, AV support, guidelines, or amenities…"
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-50 disabled:opacity-75"
             />
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={requiresApproval}
+                disabled={loading}
+                onChange={(e) => setRequiresApproval(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span>
+                <span className="block text-sm font-medium text-slate-800">
+                  Bookings require admin approval
+                </span>
+                <span className="mt-0.5 block text-xs text-slate-500">
+                  When unchecked, available slots are confirmed immediately. When checked, new
+                  bookings stay pending until an admin approves them.
+                </span>
+              </span>
+            </label>
           </div>
 
           <div className="flex gap-3 pt-3">
