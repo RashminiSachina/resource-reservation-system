@@ -436,7 +436,7 @@ export default function ProfilePage() {
               <div className="rounded-lg border border-[#E5E7EB] bg-white p-6">
                 <h2 className="text-lg font-medium text-[#1A1A1A] mb-4">Change Password</h2>
                 <p className="text-sm text-[#6B7280]">
-                  Your account uses OAuth authentication (e.g., Google). Password-based authentication is not enabled for your account.
+                  Your account does not have a password set. Password-based authentication is not enabled for your account.
                 </p>
               </div>
             )}

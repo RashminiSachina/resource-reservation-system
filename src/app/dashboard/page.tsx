@@ -114,6 +114,8 @@ export default function UserDashboard() {
     resource: ResourceCard;
     startTime: string;
     endTime: string;
+    isFixedSlot?: boolean; // true for timetable slots, false/undefined for time windows
+    isActiveSlot?: boolean; // true for active slots (start passed but end not passed)
   } | null>(null);
 
   // Timetable modal state
@@ -794,21 +796,16 @@ export default function UserDashboard() {
         <BookingModal
           resource={bookingModal.resource}
           initialStart={bookingModal.startTime}
+          initialEnd={bookingModal.endTime}
+          isFixedSlot={bookingModal.isFixedSlot}
+          isActiveSlot={bookingModal.isActiveSlot}
           onClose={() => setBookingModal(null)}
           onSuccess={(msg) => {
             setBookingModal(null);
             setSuccessBanner(msg);
             // Refresh both tabs
             void loadBookings();
-            if (windowChecked) {
-              void loadResources(
-                windowStart || undefined,
-                windowEnd || undefined,
-                selectedCategory || undefined
-              );
-            } else {
-              void loadResources(undefined, undefined, selectedCategory || undefined);
-            }
+            void loadResources(undefined, undefined, selectedCategory || undefined);
           }}
           onError={(msg) => setErrorBanner(msg)}
         />
@@ -820,12 +817,14 @@ export default function UserDashboard() {
           resourceId={timetableModal.resource.id}
           resourceName={timetableModal.resource.name}
           categoryName={timetableModal.resource.category.name}
-          onSlotSelect={(startTime) => {
+          onSlotSelect={(startTime, endTime, isActiveSlot) => {
             setTimetableModal(null);
             setBookingModal({
               resource: timetableModal.resource,
               startTime,
-              endTime: "", // Will be set by user in booking modal
+              endTime,
+              isFixedSlot: true,
+              isActiveSlot,
             });
           }}
           onClose={() => setTimetableModal(null)}
@@ -887,24 +886,47 @@ function BookingCard({
 function BookingModal({
   resource,
   initialStart,
+  initialEnd,
+  isFixedSlot,
+  isActiveSlot,
   onClose,
   onSuccess,
   onError,
 }: {
   resource: ResourceCard;
   initialStart: string;
+  initialEnd: string;
+  isFixedSlot?: boolean;
+  isActiveSlot?: boolean;
   onClose: () => void;
   onSuccess: (message: string) => void;
   onError: (message: string) => void;
 }) {
-  const [purpose, setPurpose] = useState("");
-  const [startTime, setStartTime] = useState(initialStart);
-  const [endTime, setEndTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // Format datetime-local input value from ISO string
+  const formatForInput = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hour}:${minute}`;
+  };
+
+  const [purpose, setPurpose] = useState("");
+  const [startTime, setStartTime] = useState(formatForInput(new Date(initialStart)));
+  const [endTime, setEndTime] = useState(initialEnd ? formatForInput(new Date(initialEnd)) : "");
+
+  // Check if this is a fixed end time (from timetable selection)
+  // Use the isFixedSlot flag instead of checking if initialEnd is set
+  const isFixedEndTime = isFixedSlot === true;
+
   // Generate end-time options (1-8 hours after start time)
+  // Only used when end time is not fixed
   const generateEndTimeOptions = () => {
+    if (isFixedEndTime) return [];
     const options = [];
     const start = new Date(startTime);
 
@@ -933,28 +955,57 @@ function BookingModal({
 
   const endTimeOptions = generateEndTimeOptions();
 
-  // Auto-select first end time option when start time changes
+  // Auto-select first end time option when start time changes (only for non-fixed end times)
   useEffect(() => {
-    if (startTime && !endTime && endTimeOptions.length > 0) {
+    if (!isFixedEndTime && startTime && !endTime && endTimeOptions.length > 0) {
       setEndTime(endTimeOptions[0].value);
     }
-  }, [startTime]);
+  }, [startTime, isFixedEndTime]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setErr(null);
 
+    // For active slots, recalculate start time at submission to ensure 5-minute buffer is fresh
+    let finalStart = new Date(startTime);
+    let finalEnd = new Date(endTime);
+
+    if (isActiveSlot === true) {
+      // Calculate start time: now + 5 minutes, rounded up to next whole minute
+      const targetMs = Date.now() + 5 * 60 * 1000;
+      const recalculatedStart = new Date(targetMs);
+      // Round up to next whole minute
+      recalculatedStart.setSeconds(0, 0);
+      const recalculatedMs = recalculatedStart.getTime();
+      // If rounding reduced the time below target, add 1 minute
+      if (recalculatedMs < targetMs) {
+        recalculatedStart.setMinutes(recalculatedStart.getMinutes() + 1);
+      }
+
+      // Check if recalculated start time is at or after slot end time
+      if (recalculatedStart >= finalEnd) {
+        setErr("Insufficient time remaining in this slot. Please select a different slot or a future time.");
+        return;
+      }
+
+      finalStart = recalculatedStart;
+    }
+
     // Client-side sanity checks
-    const s = new Date(startTime);
-    const en = new Date(endTime);
-    if (en <= s) {
+    if (finalEnd <= finalStart) {
       setErr("End time must be after start time.");
       return;
     }
-    if (s.getTime() - Date.now() < 60 * 1000) {
-      setErr("Start time must be at least 1 minute in the future.");
+
+    // Use reduced lead time for active-slot bookings
+    const requiredLeadMs = isActiveSlot ? 5 * 60 * 1000 : 60 * 1000;
+
+    if (finalStart.getTime() - Date.now() < requiredLeadMs) {
+      const leadMinutes = requiredLeadMs / (60 * 1000);
+      setErr(`Start time must be at least ${leadMinutes} minute${leadMinutes > 1 ? 's' : ''} in the future.`);
       return;
     }
+
     if (!purpose.trim()) {
       setErr("Please describe the purpose of your reservation.");
       return;
@@ -968,8 +1019,9 @@ function BookingModal({
         body: JSON.stringify({
           resourceId: resource.id,
           purpose: purpose.trim(),
-          startTime: s.toISOString(),
-          endTime: en.toISOString(),
+          startTime: finalStart.toISOString(),
+          endTime: finalEnd.toISOString(),
+          isActiveSlot: isActiveSlot === true,
         }),
       });
       const d = await res.json();
@@ -1050,19 +1102,33 @@ function BookingModal({
               <label className="mb-1 block text-xs font-medium text-[#6B7280]">
                 End <span className="text-rose-500">*</span>
               </label>
-              <select
-                required
-                value={endTime}
-                disabled={loading}
-                onChange={(e) => setEndTime(e.target.value)}
-                className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] disabled:opacity-75 transition-colors"
-              >
-                {endTimeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              {isFixedEndTime ? (
+                <input
+                  required
+                  type="datetime-local"
+                  value={endTime}
+                  disabled={loading}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] disabled:opacity-75 transition-colors"
+                />
+              ) : (
+                <select
+                  required
+                  value={endTime}
+                  disabled={loading}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#0052CC] focus:ring-1 focus:ring-[#0052CC] disabled:opacity-75 transition-colors"
+                >
+                  {endTimeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {isFixedEndTime && (
+                <p className="mt-1 text-xs text-[#9CA3AF]">End time is pre-selected from slot (you can adjust if needed)</p>
+              )}
             </div>
           </div>
 

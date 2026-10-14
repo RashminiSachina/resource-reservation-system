@@ -28,12 +28,12 @@ export async function GET(
     return Response.json({ error: "Invalid date format." }, { status: 400 });
   }
 
-  // Calculate start and end of the selected date (in UTC)
+  // Calculate start and end of the selected date (using local time to match UI)
   const startOfDay = new Date(selectedDate);
-  startOfDay.setUTCHours(0, 0, 0, 0);
+  startOfDay.setHours(0, 0, 0, 0);
 
   const endOfDay = new Date(selectedDate);
-  endOfDay.setUTCHours(23, 59, 59, 999);
+  endOfDay.setHours(23, 59, 59, 999);
 
   // Fetch all PENDING and CONFIRMED reservations for this resource on the selected date
   const reservations = await prisma.reservation.findMany({
