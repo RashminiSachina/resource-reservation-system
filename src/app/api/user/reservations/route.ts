@@ -12,6 +12,9 @@ import { createBulkNotifications, getActiveAdminUserIds, formatReservationTime }
 /** Minimum booking lead time: 1 minute from now */
 const MIN_LEAD_MS = 60 * 1000;
 
+/** Reduced lead time for active-slot bookings: 5 minutes */
+const ACTIVE_SLOT_LEAD_MS = 5 * 60 * 1000;
+
 /** Maximum retry attempts for Serializable transaction conflicts (P2034) */
 const MAX_TX_RETRIES = 3;
 
@@ -85,6 +88,7 @@ export async function POST(request: NextRequest) {
     purpose?: unknown;
     startTime?: unknown;
     endTime?: unknown;
+    isActiveSlot?: unknown;
   };
   try {
     body = await request.json();
@@ -92,7 +96,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { resourceId, purpose, startTime, endTime } = body;
+  const { resourceId, purpose, startTime, endTime, isActiveSlot } = body;
 
   if (typeof resourceId !== "string" || !resourceId.trim()) {
     return Response.json({ error: "Resource is required." }, { status: 400 });
@@ -115,9 +119,15 @@ export async function POST(request: NextRequest) {
   if (end <= start) {
     return Response.json({ error: "End time must be after start time." }, { status: 400 });
   }
-  if (start.getTime() - Date.now() < MIN_LEAD_MS) {
+
+  // Use reduced lead time for active-slot bookings
+  const isSlotActive = isActiveSlot === true;
+  const requiredLeadMs = isSlotActive ? ACTIVE_SLOT_LEAD_MS : MIN_LEAD_MS;
+
+  if (start.getTime() - Date.now() < requiredLeadMs) {
+    const leadMinutes = requiredLeadMs / (60 * 1000);
     return Response.json(
-      { error: "Start time must be at least 1 minute in the future." },
+      { error: `Start time must be at least ${leadMinutes} minute${leadMinutes > 1 ? 's' : ''} in the future.` },
       { status: 400 }
     );
   }

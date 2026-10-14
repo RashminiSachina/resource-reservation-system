@@ -8,6 +8,7 @@ import {
   findOccupiedOverlap,
 } from "@/lib/reservation-conflicts";
 import { createNotification, formatReservationTime } from "@/lib/notifications";
+import { sendReservationStatusEmail, isEmailConfigured } from "@/lib/email";
 
 const MAX_TX_RETRIES = 3;
 
@@ -109,7 +110,7 @@ export async function PATCH(request: NextRequest) {
       id: true,
       status: true,
       userId: true,
-      user: { select: { id: true, name: true } },
+      user: { select: { id: true, name: true, email: true } },
       resource: { select: { name: true } },
       startTime: true,
       endTime: true,
@@ -141,6 +142,24 @@ export async function PATCH(request: NextRequest) {
           message: `Your reservation for ${reservation.resource.name} has been cancelled by an administrator.`,
           type: "RESERVATION_CANCELLED",
         });
+
+        // Send email notification if email is configured
+        if (isEmailConfigured() && reservation.user.email) {
+          try {
+            await sendReservationStatusEmail({
+              to: reservation.user.email,
+              userName: reservation.user.name,
+              reservationId: reservation.id,
+              resourceName: reservation.resource.name,
+              startTime: reservation.startTime,
+              endTime: reservation.endTime,
+              status: "CANCELLED",
+            });
+          } catch (emailError) {
+            console.error("[Email] Failed to send cancellation email:", emailError);
+            // Don't fail the request if email fails
+          }
+        }
       } catch (notificationError) {
         console.error("[Notification] Failed to create cancellation notification:", notificationError);
       }
@@ -229,6 +248,7 @@ export async function PATCH(request: NextRequest) {
           startTime: true,
           endTime: true,
           resource: { select: { name: true } },
+          user: { select: { email: true, name: true } },
         },
       });
 
@@ -241,6 +261,24 @@ export async function PATCH(request: NextRequest) {
             message: `Your reservation for ${reservationForNotification.resource.name} on ${timeString} has been approved.`,
             type: "RESERVATION_CONFIRMED",
           });
+
+          // Send email notification if email is configured
+          if (isEmailConfigured() && reservationForNotification.user.email) {
+            try {
+              await sendReservationStatusEmail({
+                to: reservationForNotification.user.email,
+                userName: reservationForNotification.user.name,
+                reservationId: updated.id,
+                resourceName: reservationForNotification.resource.name,
+                startTime: reservationForNotification.startTime,
+                endTime: reservationForNotification.endTime,
+                status: "CONFIRMED",
+              });
+            } catch (emailError) {
+              console.error("[Email] Failed to send approval email:", emailError);
+              // Don't fail the request if email fails
+            }
+          }
         } catch (notificationError) {
           console.error("[Notification] Failed to create approval notification:", notificationError);
         }

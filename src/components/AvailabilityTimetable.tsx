@@ -13,7 +13,7 @@ interface AvailabilityTimetableProps {
   resourceId: string;
   resourceName: string;
   categoryName: string;
-  onSlotSelect: (startTime: string) => void;
+  onSlotSelect: (startTime: string, endTime: string, isActiveSlot: boolean) => void;
   onClose: () => void;
 }
 
@@ -67,7 +67,7 @@ export default function AvailabilityTimetable({
         }
         const data = await response.json();
         setReservations(data.reservations || []);
-      } catch (err) {
+      } catch {
         setError("Unable to load availability. Please try again.");
         setReservations([]);
       } finally {
@@ -91,6 +91,8 @@ export default function AvailabilityTimetable({
       end.setHours(hour + 1, 0, 0, 0);
 
       // Check if this slot is in the past (for today only)
+      // A slot is past only if its end time has already passed
+      // Active slots (start passed but end not passed) are still selectable
       const isPast = isToday && end <= now;
 
       // Check if this slot overlaps with any reservation
@@ -120,7 +122,37 @@ export default function AvailabilityTimetable({
 
   const handleConfirmSelection = () => {
     if (selectedSlot) {
-      onSlotSelect(selectedSlot.start);
+      // If the slot is currently active (start time has passed but end time hasn't),
+      // adjust start time to current time plus 5 minutes, rounded up to next whole minute
+      const now = new Date();
+      const slotStart = new Date(selectedSlot.start);
+      const slotEnd = new Date(selectedSlot.end);
+
+      let adjustedStart = selectedSlot.start;
+      let adjustedEnd = selectedSlot.end;
+      const isSlotActive = slotStart <= now && slotEnd > now;
+
+      if (isSlotActive) {
+        // Calculate start time: now + 5 minutes, rounded up to next whole minute
+        const bufferedStart = new Date(now.getTime() + 5 * 60 * 1000);
+
+        // Round up to next whole minute
+        bufferedStart.setSeconds(0, 0);
+        if (bufferedStart.getMinutes() < now.getMinutes() + 5) {
+          bufferedStart.setMinutes(bufferedStart.getMinutes() + 1);
+        }
+
+        // Check if calculated start time is at or after slot end time
+        if (bufferedStart >= slotEnd) {
+          // Insufficient time remaining - don't allow booking
+          alert("Insufficient time remaining in this slot. Please select a different slot or a future time.");
+          return;
+        }
+
+        adjustedStart = bufferedStart.toISOString();
+      }
+
+      onSlotSelect(adjustedStart, adjustedEnd, isSlotActive);
     }
   };
 
