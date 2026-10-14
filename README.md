@@ -154,48 +154,10 @@ All API routes are under `/api/`. Authentication is enforced via an HTTP-only se
 | `GET / POST` | `/api/admin/categories` | List or create categories |
 | `GET / PATCH` | `/api/admin/reservations` | List all reservations; confirm or cancel |
 | `GET` | `/api/admin/users` | List all users |
+
 ---
+
 ## 🗄️ Database Schema
-```
-┌──────────────────────┐      ┌──────────────────────┐
-│         User         │      │   ResourceCategory   │
-│──────────────────────│      │──────────────────────│
-│ id (cuid)            │      │ id (cuid)            │
-│ name                 │      │ name (unique)        │
-│ email (unique)       │      │ description          │
-│ passwordHash         │      └──────────┬───────────┘
-│ googleId             │                 │ 1
-│ role (USER|ADMIN)    │                 │
-│ isActive             │                 │ *
-└────────┬─────────────┘      ┌──────────┴───────────┐
-         │ 1                  │       Resource        │
-         │                    │──────────────────────│
-         │ *                  │ id (cuid)            │
-┌────────┴─────────────┐      │ name                 │
-│     Reservation      │      │ description          │
-│──────────────────────│      │ location             │
-│ id (cuid)            │ *    │ capacity             │
-│ userId          ─────┘ ─ ─ ─│ isActive             │
-│ resourceId      ─────────── │ requiresApproval     │
-│ requesterName        │      └──────────────────────┘
-│ requesterEmail       │
-│ purpose              │      ┌──────────────────────┐
-│ startTime            │      │    Notification      │
-│ endTime              │      │──────────────────────│
-│ status               │      │ id (cuid)            │
-│  PENDING             │      │ userId               │
-│  CONFIRMED           │      │ title                │
-│  CANCELLED           │      │ message              │
-└──────────────────────┘      │ type                 │
-                               │ readAt               │
-                               └──────────────────────┘
-┌──────────────────────┐
-│  PasswordResetToken  │
-│──────────────────────│
-│ id (cuid)            │
-│ userId               │
-└──────────────────────┘
-```
 
 ### Entity Relationship Diagram
 
