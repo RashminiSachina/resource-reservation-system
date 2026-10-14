@@ -1,26 +1,15 @@
-<div align="center">
-<h1>
-  <img src="https://img.shields.io/badge/ReserveIt-0052CC?style=flat-square&logoColor=white" alt="ReserveIt" height="32"/>
-</h1>
-<p><strong>A modern, full-stack resource reservation system built with Next.js 16, Prisma ORM, and PostgreSQL.</strong></p>
-<p>
-  <a href="#-features">Features</a> ·
-  <a href="#-screenshots">Screenshots</a> ·
-  <a href="#-tech-stack">Tech Stack</a> ·
-  <a href="#-getting-started">Getting Started</a> ·
-  <a href="#-environment-variables">Configuration</a> ·
-  <a href="#-api-reference">API Reference</a> ·
-  <a href="#-database-schema">Schema</a>
-</p>
-<p>
-  <img src="https://img.shields.io/badge/Next.js-16.4.0-black?style=flat-square&logo=next.js" alt="Next.js"/>
-  <img src="https://img.shields.io/badge/Prisma-7.x-2D3748?style=flat-square&logo=prisma" alt="Prisma"/>
-  <img src="https://img.shields.io/badge/PostgreSQL-latest-336791?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
-  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/Tailwind_CSS-4.x-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS"/>
-</p>
-</div>
+# ReserveIt
+
+A modern, full-stack resource reservation system built with Next.js 16, Prisma ORM, and PostgreSQL.
+
+[Next.js](https://img.shields.io/badge/Next.js-16.4.0-black?style=flat-square&logo=next.js)
+[Prisma](https://img.shields.io/badge/Prisma-7.x-2D3748?style=flat-square&logo=prisma)
+[PostgreSQL](https://img.shields.io/badge/PostgreSQL-latest-336791?style=flat-square&logo=postgresql&logoColor=white)
+[TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)
+[Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.x-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white)
+
 ---
+
 ## ✨ Features
 ### 👤 User Features
 - **Resource Discovery** — Browse all available resources with category filtering and real-time availability checks
@@ -205,14 +194,13 @@ All API routes are under `/api/`. Authentication is enforced via an HTTP-only se
 │──────────────────────│
 │ id (cuid)            │
 │ userId               │
-│ otpHash              │
-│ tokenHash            │
-│ expiresAt            │
-│ tokenExpiresAt       │
-│ attempts             │
-│ maxAttempts          │
 └──────────────────────┘
 ```
+
+### Entity Relationship Diagram
+
+![Database Schema ERD](public/screenshots/Resource-Reservation-ERD.drawio.png)
+
 ### Reservation Statuses
 | Status | Description |
 |--------|-------------|
